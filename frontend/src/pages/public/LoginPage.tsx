@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { LogIn, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { PublicLayout } from "../../layouts/PublicLayout";
+import { TournamentCountdown } from "../../components/ui/TournamentCountdown";
 import { showErrorToast } from "../../utils/errorHandler";
 
 export function LoginPage() {
@@ -54,7 +55,8 @@ export function LoginPage() {
   return (
     <PublicLayout>
       <div className="min-h-[calc(100vh-140px)] flex items-center justify-center px-4 py-8 sm:py-12">
-        <div className="w-full max-w-md max-w-full animate-fade-in-up">
+        <div className="w-full max-w-md max-w-full animate-fade-in-up space-y-4 sm:space-y-5">
+          <TournamentCountdown />
           {/* Card */}
           <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden max-w-full">
             {/* Header */}
@@ -145,18 +147,6 @@ export function LoginPage() {
                   Ingresar
                 </button>
               </form>
-
-              {/* Quick access demo removed */}
-
-              <p className="text-center text-xs text-slate-400 mt-5">
-                ¿No tenés usuario?{" "}
-                <a
-                  href="/participar"
-                  className="font-semibold text-blue-600 hover:text-blue-700 underline underline-offset-2"
-                >
-                  Pedí tu usuario
-                </a>
-              </p>
             </div>
           </div>
         </div>

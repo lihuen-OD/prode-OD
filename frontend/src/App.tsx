@@ -3,12 +3,11 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './hooks/useAuth';
 import { BackendLoadingProvider } from './contexts/BackendLoadingContext';
 import { BackendLoader } from './components/ui/BackendLoader';
+import { useAuth } from './hooks/useAuth';
 import { ProtectedRoute } from './routes/ProtectedRoute';
 
 // Public pages
-import { LandingPage } from './pages/public/LandingPage';
 import { LoginPage } from './pages/public/LoginPage';
-import { ParticiparPage } from './pages/public/ParticiparPage';
 import { RankingPublicPage } from './pages/public/RankingPublicPage';
 
 // User pages
@@ -22,6 +21,20 @@ import { AdminUsersPage } from './pages/admin/AdminUsersPage';
 import { AdminMatchesPage } from './pages/admin/AdminMatchesPage';
 import { AdminResultsPage } from './pages/admin/AdminResultsPage';
 import { AdminRankingPage } from './pages/admin/AdminRankingPage';
+
+function EntryRedirect() {
+  const { isAuthenticated, isAdmin } = useAuth();
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <Navigate to={isAdmin ? '/admin' : '/app'} replace />;
+}
+
+function LegacyPublicRedirect() {
+  return <Navigate to="/login" replace />;
+}
 
 export default function App() {
   return (
@@ -55,9 +68,10 @@ export default function App() {
 
           <Routes>
           {/* ── Public ─────────────────────────────────── */}
-          <Route path="/" element={<LandingPage />} />
+          <Route path="/" element={<EntryRedirect />} />
+          <Route path="/inicio" element={<EntryRedirect />} />
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/participar" element={<ParticiparPage />} />
+          <Route path="/participar" element={<LegacyPublicRedirect />} />
           <Route
             path="/ranking"
             element={
@@ -136,7 +150,7 @@ export default function App() {
           />
 
           {/* ── Fallback ───────────────────────────────── */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<EntryRedirect />} />
           </Routes>
         </BackendLoadingProvider>
       </AuthProvider>
