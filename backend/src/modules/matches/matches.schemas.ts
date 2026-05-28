@@ -57,8 +57,9 @@ export const updateMatchSchema = z.object({
 export const resultMatchSchema = z.object({
   params: z.object({ id: z.string().min(1) }),
   body: z.object({
-    homeScore: z.number().int().min(0),
-    awayScore: z.number().int().min(0),
+    result: predictionChoice.optional(),
+    homeScore: z.number().int().min(0).optional().nullable(),
+    awayScore: z.number().int().min(0).optional().nullable(),
     winnerTeamId: z.string().optional().nullable(),
   }),
 });

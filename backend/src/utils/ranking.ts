@@ -16,6 +16,7 @@ async function loadRankingRows(tournamentId: string, client: PrismaLike) {
         id: true,
         phase: true,
         status: true,
+        result: true,
         homeScore: true,
         awayScore: true,
         homeTeamId: true,

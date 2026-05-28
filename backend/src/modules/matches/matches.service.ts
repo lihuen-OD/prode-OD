@@ -3,7 +3,7 @@ import { prisma } from '../../config/prisma.js';
 import { AppError } from '../../utils/AppError.js';
 import { recalculateRankingSnapshotsWithClient } from '../../utils/ranking.js';
 import { parseArgentinaDateTime } from '../../utils/timezone.js';
-import { calculatePredictionPoints, getGroupResult, getPredictionDeadline, getPredictionTypeForPhase, MATCH_PHASE_ORDER } from '../../utils/matchRules.js';
+import { calculatePredictionPoints, getPredictionDeadline, getPredictionTypeForPhase, MATCH_PHASE_ORDER } from '../../utils/matchRules.js';
 
 const teamSelect = {
   id: true,
@@ -311,7 +311,7 @@ export async function deleteAdminMatch(id: string) {
   });
 }
 
-export async function setMatchResult(id: string, data: { homeScore: number; awayScore: number; winnerTeamId?: string | null }) {
+export async function setMatchResult(id: string, data: { result?: PredictionChoice; homeScore?: number | null; awayScore?: number | null; winnerTeamId?: string | null }) {
   const match = await prisma.match.findUnique({
     where: { id },
     select: {
@@ -338,19 +338,26 @@ export async function setMatchResult(id: string, data: { homeScore: number; away
   }
 
   if (match.phase === 'GROUP') {
-    if (data.homeScore == null || data.awayScore == null) {
-      throw new AppError('Debés cargar los goles del partido', 400);
+    if (!data.result || !['HOME', 'DRAW', 'AWAY'].includes(data.result)) {
+      throw new AppError('Debés indicar si ganó local, hubo empate o ganó visitante', 400);
     }
   } else {
     if (!match.homeTeamId || !match.awayTeamId) {
       throw new AppError('No se puede finalizar una eliminatoria sin los dos equipos reales definidos', 400);
     }
 
-    if (data.homeScore == null || data.awayScore == null || !data.winnerTeamId) {
-      throw new AppError('En eliminatorias debés indicar goles y equipo clasificado', 400);
+    if (data.result === 'DRAW') {
+      throw new AppError('En eliminatorias no existe empate como resultado del prode', 400);
     }
 
-    if (![match.homeTeamId, match.awayTeamId].includes(data.winnerTeamId)) {
+    const winnerTeamId = data.winnerTeamId
+      ?? (data.result === 'HOME' ? match.homeTeamId : data.result === 'AWAY' ? match.awayTeamId : null);
+
+    if (!winnerTeamId) {
+      throw new AppError('En eliminatorias debés indicar el equipo clasificado', 400);
+    }
+
+    if (![match.homeTeamId, match.awayTeamId].includes(winnerTeamId)) {
       throw new AppError('El equipo clasificado no participa en este partido', 400);
     }
   }
@@ -358,17 +365,17 @@ export async function setMatchResult(id: string, data: { homeScore: number; away
   const updated = await prisma.$transaction(async transaction => {
     const finalWinnerTeamId = match.phase === 'GROUP'
       ? null
-      : data.winnerTeamId ?? null;
+      : data.winnerTeamId ?? (data.result === 'HOME' ? match.homeTeamId : data.result === 'AWAY' ? match.awayTeamId : null);
 
     const finalMatch = await transaction.match.update({
       where: { id },
       data: {
         status: 'FINISHED',
-        homeScore: data.homeScore,
-        awayScore: data.awayScore,
+        homeScore: data.homeScore ?? null,
+        awayScore: data.awayScore ?? null,
         winnerTeamId: finalWinnerTeamId,
         result: match.phase === 'GROUP'
-          ? getGroupResult(data.homeScore, data.awayScore)
+          ? data.result
           : (finalWinnerTeamId === match.homeTeamId ? 'HOME' : 'AWAY'),
       },
       select: matchSelect,

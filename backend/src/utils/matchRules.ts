@@ -15,6 +15,7 @@ type MatchLike = {
   winnerTeamId?: string | null;
   homeScore?: number | null;
   awayScore?: number | null;
+  result?: PredictionChoice | null;
 };
 
 export const MATCH_PHASE_LABELS: Record<MatchPhase, string> = {
@@ -116,13 +117,17 @@ export function getQualifierWinnerSide(match: Pick<MatchLike, 'homeTeamId' | 'aw
 
 export function calculatePredictionPoints(
   prediction: Pick<{ choice: PredictionChoice }, 'choice'>,
-  match: Pick<MatchLike, 'phase' | 'status' | 'homeScore' | 'awayScore' | 'homeTeamId' | 'awayTeamId' | 'winnerTeamId'>,
+  match: Pick<MatchLike, 'phase' | 'status' | 'result' | 'homeScore' | 'awayScore' | 'homeTeamId' | 'awayTeamId' | 'winnerTeamId'>,
 ) {
   if (match.status !== 'FINISHED') {
     return 0;
   }
 
   if (match.phase === 'GROUP') {
+    if (match.result) {
+      return prediction.choice === match.result ? 3 : 0;
+    }
+
     if (match.homeScore == null || match.awayScore == null) {
       return 0;
     }

@@ -46,8 +46,6 @@ interface ConfirmModalState {
   open: boolean;
   match: Match | null;
   result: PredictionChoice | null;
-  homeScore: string;
-  awayScore: string;
 }
 
 const getLocalMatchDateTime = (match: Match) => {
@@ -288,10 +286,6 @@ function ConfirmResultModal({
   open,
   match,
   result,
-  homeScore,
-  awayScore,
-  onChangeHomeScore,
-  onChangeAwayScore,
   onCancel,
   onConfirm,
   loading,
@@ -299,10 +293,6 @@ function ConfirmResultModal({
   open: boolean;
   match: Match | null;
   result: PredictionChoice | null;
-  homeScore: string;
-  awayScore: string;
-  onChangeHomeScore: (value: string) => void;
-  onChangeAwayScore: (value: string) => void;
   onCancel: () => void;
   onConfirm: () => void;
   loading: boolean;
@@ -331,29 +321,6 @@ function ConfirmResultModal({
             <p className="text-sm text-slate-700">
               Resultado seleccionado: <span className="font-bold text-blue-700">{match.phase === 'GROUP' ? choiceLabel[result] : result === 'HOME' ? match.homeTeam : match.awayTeam}</span>
             </p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3 mt-4">
-            <label className="block">
-              <span className="text-xs font-semibold text-slate-600 mb-1 block">Goles local</span>
-              <input
-                type="number"
-                min="0"
-                value={homeScore}
-                onChange={event => onChangeHomeScore(event.target.value)}
-                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
-              />
-            </label>
-            <label className="block">
-              <span className="text-xs font-semibold text-slate-600 mb-1 block">Goles visitante</span>
-              <input
-                type="number"
-                min="0"
-                value={awayScore}
-                onChange={event => onChangeAwayScore(event.target.value)}
-                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
-              />
-            </label>
           </div>
         </div>
 
@@ -384,7 +351,7 @@ export function AdminResultsPage() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [pendingResults, setPendingResults] = useState<Record<string, PredictionChoice>>({});
   const [resultSource] = useState<'MANUAL' | 'API'>('MANUAL');
-  const [confirmModal, setConfirmModal] = useState<ConfirmModalState>({ open: false, match: null, result: null, homeScore: '', awayScore: '' });
+  const [confirmModal, setConfirmModal] = useState<ConfirmModalState>({ open: false, match: null, result: null });
   const [confirming, setConfirming] = useState(false);
   const [nowTick, setNowTick] = useState(Date.now());
 
@@ -469,11 +436,10 @@ export function AdminResultsPage() {
     };
   }, [matches, nowTick]);
 
-  const handleSetResult = async (match: Match, result: PredictionChoice, homeScore: number, awayScore: number) => {
+  const handleSetResult = async (match: Match, result: PredictionChoice) => {
     try {
       await matchesService.setResult(match.id, {
-        homeScore,
-        awayScore,
+        result,
         winnerTeamId: match.phase === 'GROUP'
           ? null
           : (result === 'HOME' ? match.homeTeamId : match.awayTeamId),
@@ -516,14 +482,12 @@ export function AdminResultsPage() {
       open: true,
       match,
       result: selected,
-      homeScore: selected === 'DRAW' ? '0' : '1',
-      awayScore: selected === 'DRAW' ? '0' : selected === 'HOME' ? '0' : '1',
     });
   };
 
   const closeConfirmModal = () => {
     if (confirming) return;
-    setConfirmModal({ open: false, match: null, result: null, homeScore: '', awayScore: '' });
+    setConfirmModal({ open: false, match: null, result: null });
   };
 
   const confirmSelectedResult = async () => {
@@ -531,8 +495,8 @@ export function AdminResultsPage() {
 
     setConfirming(true);
     try {
-      await handleSetResult(confirmModal.match, confirmModal.result, Number(confirmModal.homeScore), Number(confirmModal.awayScore));
-      setConfirmModal({ open: false, match: null, result: null, homeScore: '', awayScore: '' });
+      await handleSetResult(confirmModal.match, confirmModal.result);
+      setConfirmModal({ open: false, match: null, result: null });
     } finally {
       setConfirming(false);
     }
@@ -627,10 +591,6 @@ export function AdminResultsPage() {
           open={confirmModal.open}
           match={confirmModal.match}
           result={confirmModal.result}
-          homeScore={confirmModal.homeScore}
-          awayScore={confirmModal.awayScore}
-          onChangeHomeScore={value => setConfirmModal(prev => ({ ...prev, homeScore: value }))}
-          onChangeAwayScore={value => setConfirmModal(prev => ({ ...prev, awayScore: value }))}
           loading={confirming}
           onCancel={closeConfirmModal}
           onConfirm={() => void confirmSelectedResult()}

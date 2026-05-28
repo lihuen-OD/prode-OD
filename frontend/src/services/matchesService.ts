@@ -160,14 +160,14 @@ export const matchesService = {
     return mapMatch(response.match);
   },
 
-  async setResult(id: string, result: { homeScore: number; awayScore: number; winnerTeamId?: string | null } | PredictionChoice): Promise<Match | null> {
+  async setResult(id: string, result: { result?: PredictionChoice; homeScore?: number | null; awayScore?: number | null; winnerTeamId?: string | null } | PredictionChoice): Promise<Match | null> {
     if (USE_MOCKS) {
       return matchesService.update(id, { result, status: 'FINISHED' });
     }
 
     const response = await apiFetch<{ match: any }>(`/admin/matches/${id}/result`, {
       method: 'PUT',
-      body: JSON.stringify(result),
+      body: JSON.stringify(typeof result === 'string' ? { result } : result),
     });
     return mapMatch(response.match);
   },
