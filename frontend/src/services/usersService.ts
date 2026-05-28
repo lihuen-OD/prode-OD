@@ -7,7 +7,7 @@ export interface UserCreateInput extends Omit<User, 'id' | 'createdAt'> {
   password: string;
 }
 
-const STORAGE_KEY = 'baru_users';
+const STORAGE_KEY = 'odwyer_users';
 
 function loadUsers(): User[] {
   const raw = localStorage.getItem(STORAGE_KEY);

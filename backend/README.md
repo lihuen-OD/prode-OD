@@ -1,6 +1,6 @@
-# Club Deportivo Barú - Backend
+# LOS O'DWYER - Backend
 
-Backend real para el Prode Mundial 2026 del Club Deportivo Barú.
+Backend real para el Prode Mundial 2026 de LOS O'DWYER.
 
 ## Stack
 

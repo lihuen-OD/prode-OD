@@ -2,7 +2,7 @@ import type { AuthUser } from '../types';
 import { apiFetch, setToken, USE_MOCKS } from './apiClient';
 import { mapAuthUser } from './mappers';
 
-const AUTH_KEY = 'baru_auth_user';
+const AUTH_KEY = 'odwyer_auth_user';
 
 const mockUsers: Record<string, AuthUser> = {
   admin: { id: 'user-admin-1', username: 'admin', fullName: 'Administrador', role: 'ADMIN' },

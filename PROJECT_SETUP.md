@@ -1,9 +1,9 @@
-# Club Deportivo Barú - Prode Mundial 2026
+# LOS O'DWYER - Prode Mundial 2026
 
 ## Estructura del Proyecto
 
 ```
-prode-baru/
+prode-odwyer/
 ├── backend/              # Node.js + Express + TypeScript + Prisma backend
 │   ├── src/             # TypeScript source files
 │   │   ├── app.ts       # Express app setup

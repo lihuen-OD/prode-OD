@@ -53,7 +53,7 @@ export function SponsorCarousel() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 mb-8">
         <div className="text-center">
           <h2 className="text-2xl sm:text-3xl font-black text-white font-display mb-1 break-words">
-            Acompañan al Club Deportivo Barú
+            Acompañan a LOS O'DWYER
           </h2>
         </div>
       </div>

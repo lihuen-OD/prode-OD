@@ -20,12 +20,12 @@ export function PublicLayout({ children }: { children: ReactNode }) {
             <div className="w-9 h-9 bg-white rounded-xl flex items-center justify-center shadow-sm overflow-hidden border border-slate-200 p-1">
               <img
                 src="/assets/logos/favicon.png"
-                alt="Escudo Club Deportivo Barú"
+                alt="Escudo LOS O'DWYER"
                 className="w-full h-full object-contain"
               />
             </div>
             <div className="hidden sm:block">
-              <p className="text-slate-900 font-bold text-sm leading-tight">Club Deportivo Barú</p>
+              <p className="text-slate-900 font-bold text-sm leading-tight">LOS O'DWYER</p>
               <p className="text-blue-600 text-xs font-medium">Prode Mundial 2026</p>
             </div>
           </Link>
@@ -74,7 +74,7 @@ export function PublicLayout({ children }: { children: ReactNode }) {
 
       {/* Footer */}
       <footer className="bg-slate-900 text-slate-400 text-xs py-6 px-4 text-center">
-        <p className="font-semibold text-slate-300 mb-1">Club Deportivo Barú</p>
+        <p className="font-semibold text-slate-300 mb-1">LOS O'DWYER</p>
         <p>Prode Mundial 2026 · Todos los derechos reservados</p>
       </footer>
     </div>

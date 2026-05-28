@@ -2,7 +2,7 @@ import { prisma } from '../../config/prisma.js';
 import { AppError } from '../../utils/AppError.js';
 import { parseArgentinaDateTime } from '../../utils/timezone.js';
 
-const CLUB_NAME = 'Club Deportivo Barú';
+const CLUB_NAME = "LOS O'DWYER";
 
 export async function getPublicSettings() {
   const tournament = await prisma.tournament.findFirst({

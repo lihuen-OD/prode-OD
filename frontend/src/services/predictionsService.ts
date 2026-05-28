@@ -4,7 +4,7 @@ import { authService } from './authService';
 import { mapPrediction } from './mappers';
 import { mockPredictions } from '../mocks/data';
 
-const STORAGE_KEY = 'baru_predictions';
+const STORAGE_KEY = 'odwyer_predictions';
 
 function loadPredictions(): Prediction[] {
   const raw = localStorage.getItem(STORAGE_KEY);

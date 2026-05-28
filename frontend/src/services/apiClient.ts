@@ -9,8 +9,8 @@ export const USE_MOCKS = String(import.meta.env.VITE_USE_MOCKS ?? 'true') === 't
 
 import ApiError from '../utils/ApiError';
 
-const TOKEN_KEY = 'baru_token';
-const BACKEND_WARM_KEY = 'baru_backend_warm';
+const TOKEN_KEY = 'odwyer_token';
+const BACKEND_WARM_KEY = 'odwyer_backend_warm';
 
 function isBackendWarm() {
   try {

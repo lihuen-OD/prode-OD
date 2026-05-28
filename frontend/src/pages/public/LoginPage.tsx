@@ -62,7 +62,7 @@ export function LoginPage() {
               <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-md overflow-hidden p-1.5">
                 <img
                   src="/assets/logos/favicon.png"
-                  alt="Escudo Club Deportivo Barú"
+                  alt="Escudo LOS O'DWYER"
                   className="w-full h-full object-contain"
                 />
               </div>
@@ -70,7 +70,7 @@ export function LoginPage() {
                 Iniciar sesión
               </h1>
               <p className="text-blue-200 text-sm mt-1">
-                Club Deportivo Barú · Prode 2026
+                LOS O'DWYER · Prode 2026
               </p>
             </div>
 

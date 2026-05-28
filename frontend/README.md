@@ -1,4 +1,4 @@
-# Club Deportivo Barú - Frontend
+# LOS O'DWYER - Frontend
 
 Frontend en React + TypeScript + Vite para el Prode Mundial 2026.
 

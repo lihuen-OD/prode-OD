@@ -55,13 +55,12 @@ export function AppLayout({ children, variant }: AppLayoutProps) {
           <div className="w-9 h-9 bg-white rounded-xl flex items-center justify-center shadow-sm overflow-hidden border border-blue-200 p-1">
             <img
               src="/assets/logos/favicon.png"
-              alt="Escudo Club Deportivo Barú"
+              alt="Escudo LOS O'DWYER"
               className="w-full h-full object-contain"
             />
           </div>
           <div>
-            <p className="text-white font-bold text-sm leading-tight">Club Deportivo</p>
-            <p className="text-blue-300 text-xs font-medium">Barú</p>
+            <p className="text-white font-bold text-sm leading-tight">LOS O'DWYER</p>
           </div>
         </Link>
       </div>
@@ -151,7 +150,7 @@ export function AppLayout({ children, variant }: AppLayoutProps) {
             <div className="w-7 h-7 bg-white rounded-lg flex items-center justify-center overflow-hidden border border-blue-200 p-1">
               <img
                 src="/assets/logos/favicon.png"
-                alt="Escudo Club Deportivo Barú"
+                alt="Escudo LOS O'DWYER"
                 className="w-full h-full object-contain"
               />
             </div>

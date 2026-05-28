@@ -26,7 +26,7 @@ export function ParticiparPage() {
             <div className="bg-gradient-to-r from-blue-900 to-blue-700 px-5 sm:px-8 py-7 sm:py-8 text-center">
               <div className="text-4xl sm:text-5xl mb-3">⚽</div>
               <h1 className="text-white text-xl sm:text-2xl font-black font-display break-words">¿Cómo participar?</h1>
-              <p className="text-blue-200 text-sm mt-1">Prode Mundial 2026 · Club Deportivo Barú</p>
+              <p className="text-blue-200 text-sm mt-1">Prode Mundial 2026 · LOS O'DWYER</p>
             </div>
 
             <div className="px-5 sm:px-8 py-7 sm:py-8">

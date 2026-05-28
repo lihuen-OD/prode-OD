@@ -3,7 +3,7 @@ import { apiFetch, USE_MOCKS } from './apiClient';
 import { mapRankingEntry } from './mappers';
 import { mockRanking } from '../mocks/data';
 
-const STORAGE_KEY = 'baru_ranking';
+const STORAGE_KEY = 'odwyer_ranking';
 
 function loadRanking(): RankingEntry[] {
   const raw = localStorage.getItem(STORAGE_KEY);

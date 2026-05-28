@@ -3,7 +3,7 @@ import { apiFetch, USE_MOCKS } from './apiClient';
 import { mapSettings } from './mappers';
 import { mockSettings } from '../mocks/data';
 
-const STORAGE_KEY = 'baru_settings';
+const STORAGE_KEY = 'odwyer_settings';
 
 function loadSettings(): AppSettings {
   const raw = localStorage.getItem(STORAGE_KEY);

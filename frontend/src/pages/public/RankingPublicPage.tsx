@@ -24,7 +24,7 @@ export function RankingPublicPage() {
           <Trophy className="w-7 h-7 text-white" />
         </div>
         <h1 className="text-2xl sm:text-4xl font-black text-white font-display mb-2 break-words">Ranking General</h1>
-        <p className="text-blue-200 text-sm sm:text-base break-words">Club Deportivo Barú · Prode Mundial 2026</p>
+        <p className="text-blue-200 text-sm sm:text-base break-words">LOS O'DWYER · Prode Mundial 2026</p>
       </div>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10">

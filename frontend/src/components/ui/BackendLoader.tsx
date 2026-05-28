@@ -15,7 +15,7 @@ export function BackendLoader() {
               <path d="M8 12h8" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
-          <h3 className="text-white text-lg font-semibold">Preparando el Prode Mundial Club Deportivo Barú...</h3>
+          <h3 className="text-white text-lg font-semibold">Preparando el Prode Mundial de LOS O'DWYER...</h3>
           <p className="text-sm text-slate-100">{message ?? 'Estamos cargando la información del torneo. Esto puede tardar unos segundos...'}</p>
 
           <div className="mt-3">

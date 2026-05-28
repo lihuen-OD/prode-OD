@@ -24,7 +24,7 @@ export function LandingPage() {
 
           {/* Main title */}
           <h1 className="text-3xl sm:text-6xl lg:text-7xl font-black text-white font-display leading-tight sm:leading-none mb-4 animate-fade-in-up break-words">
-            Club Deportivo Barú
+            LOS O'DWYER
           </h1>
 
           <h2 className="text-lg sm:text-2xl lg:text-3xl font-bold text-white/90 mb-4 animate-fade-in-up delay-100 break-words">

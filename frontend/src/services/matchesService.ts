@@ -5,7 +5,7 @@ import { mapMatch } from './mappers';
 import { mockMatches } from '../mocks/data';
 import { buildTournamentDateTimeIso } from '../utils/timezone';
 
-const STORAGE_KEY = 'baru_matches';
+const STORAGE_KEY = 'odwyer_matches';
 let cachedTournamentId: string | null = null;
 
 function loadMatches(): Match[] {

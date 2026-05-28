@@ -21,7 +21,7 @@ export const mockUsers: User[] = [
     id: 'user-admin-1',
     username: 'admin',
     fullName: 'Administrador',
-    email: 'admin@clubbaru.com',
+    email: 'admin@od.com',
     role: 'ADMIN',
     paymentStatus: 'PAID',
     isActive: true,
