@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import { prisma } from '../../config/prisma.js';
 import { AppError } from '../../utils/AppError.js';
 import { parseArgentinaDateTime } from '../../utils/timezone.js';
@@ -46,7 +47,7 @@ export async function updateAdminSettings(data: {
     throw new AppError('No hay torneo configurado', 404);
   }
 
-  await prisma.$transaction(async transaction => {
+  await prisma.$transaction(async (transaction: Prisma.TransactionClient) => {
     if (data.predictionsCloseAt || data.status) {
       await transaction.tournament.update({
         where: { id: tournament.id },
