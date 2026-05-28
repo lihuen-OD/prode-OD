@@ -18,7 +18,6 @@ export function mapUser(apiUser: any): User {
     email: apiUser.email ?? undefined,
     phone: apiUser.phone ?? undefined,
     role: apiUser.role,
-    paymentStatus: apiUser.paymentStatus,
     isActive: apiUser.isActive,
     createdAt: apiUser.createdAt,
   };

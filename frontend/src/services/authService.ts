@@ -6,9 +6,13 @@ const AUTH_KEY = 'odwyer_auth_user';
 
 const mockUsers: Record<string, AuthUser> = {
   admin: { id: 'user-admin-1', username: 'admin', fullName: 'Administrador', role: 'ADMIN' },
+  'admin@od.com': { id: 'user-admin-1', username: 'admin', fullName: 'Administrador', role: 'ADMIN' },
   'juan.perez': { id: 'user-1', username: 'juan.perez', fullName: 'Juan Pérez', role: 'USER' },
+  'juan@email.com': { id: 'user-1', username: 'juan.perez', fullName: 'Juan Pérez', role: 'USER' },
   'maria.gonzalez': { id: 'user-2', username: 'maria.gonzalez', fullName: 'María González', role: 'USER' },
+  'maria@email.com': { id: 'user-2', username: 'maria.gonzalez', fullName: 'María González', role: 'USER' },
   'ana.martinez': { id: 'user-4', username: 'ana.martinez', fullName: 'Ana Martínez', role: 'USER' },
+  'ana@email.com': { id: 'user-4', username: 'ana.martinez', fullName: 'Ana Martínez', role: 'USER' },
 };
 
 function saveSession(user: AuthUser | null, token?: string | null): void {

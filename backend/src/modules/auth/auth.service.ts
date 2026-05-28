@@ -12,7 +12,15 @@ function toSafeUser(user: User) {
 }
 
 export async function loginUser(username: string, password: string) {
-  const user = await prisma.user.findUnique({ where: { username } });
+  const identifier = username.trim();
+  const user = await prisma.user.findFirst({
+    where: {
+      OR: [
+        { username: { equals: identifier, mode: 'insensitive' } },
+        { email: { equals: identifier, mode: 'insensitive' } },
+      ],
+    },
+  });
 
   if (!user || !user.isActive) {
     throw new AppError('Usuario o contraseña incorrectos', 401);

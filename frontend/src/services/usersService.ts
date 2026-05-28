@@ -3,8 +3,17 @@ import { apiFetch, USE_MOCKS } from './apiClient';
 import { mapUser } from './mappers';
 import { mockUsers } from '../mocks/data';
 
-export interface UserCreateInput extends Omit<User, 'id' | 'createdAt'> {
+export interface UserCreateInput {
+  fullName: string;
+  username: string;
   password: string;
+}
+
+export interface UserUpdateInput {
+  fullName?: string;
+  username?: string;
+  password?: string;
+  isActive?: boolean;
 }
 
 const STORAGE_KEY = 'odwyer_users';
@@ -56,9 +65,14 @@ export const usersService = {
   async create(data: UserCreateInput): Promise<User> {
     if (USE_MOCKS) {
       const users = loadUsers();
+      const { password: _password, ...userData } = data;
       const newUser: User = {
-        ...data,
+        ...userData,
         id: `user-${Date.now()}`,
+        role: 'USER',
+        email: undefined,
+        phone: undefined,
+        isActive: true,
         createdAt: new Date().toISOString(),
       };
       users.push(newUser);
@@ -73,12 +87,13 @@ export const usersService = {
     return mapUser(response.user);
   },
 
-  async update(id: string, data: Partial<User>): Promise<User | null> {
+  async update(id: string, data: UserUpdateInput): Promise<User | null> {
     if (USE_MOCKS) {
       const users = loadUsers();
       const idx = users.findIndex(u => u.id === id);
       if (idx === -1) return null;
-      users[idx] = { ...users[idx], ...data };
+      const { password: _password, ...userData } = data;
+      users[idx] = { ...users[idx], ...userData };
       saveUsers(users);
       return users[idx];
     }
@@ -103,17 +118,13 @@ export const usersService = {
       return {
         total: participants.length,
         active: participants.filter(u => u.isActive).length,
-        paid: participants.filter(u => u.paymentStatus === 'PAID').length,
-        pending: participants.filter(u => u.paymentStatus === 'PENDING').length,
       };
     }
 
-    const response = await apiFetch<{ stats: { totalUsers: number; paidUsers: number; pendingUsers: number; activeUsers: number } }>('/admin/users/stats');
+    const response = await apiFetch<{ stats: { totalUsers: number; activeUsers: number } }>('/admin/users/stats');
     return {
       total: response.stats.totalUsers,
       active: response.stats.activeUsers,
-      paid: response.stats.paidUsers,
-      pending: response.stats.pendingUsers,
     };
   },
 };

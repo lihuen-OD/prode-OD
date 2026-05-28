@@ -3,10 +3,10 @@ import { Plus, Pencil, Power, X, Check, Eye, EyeOff } from 'lucide-react';
 import { AppLayout } from '../../layouts/AppLayout';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { EmptyState } from '../../components/ui/EmptyState';
-import { PaymentStatusBadge, ActiveBadge } from '../../components/ui/StatusBadge';
+import { ActiveBadge } from '../../components/ui/StatusBadge';
 import { usersService } from '../../services/usersService';
 import { extractError, showErrorToast, showSuccessToast } from '../../utils/errorHandler';
-import type { User, PaymentStatus } from '../../types';
+import type { User } from '../../types';
 
 // ─── User Form Modal ──────────────────────────────────────────────────────────
 
@@ -14,9 +14,6 @@ interface UserFormData {
   fullName: string;
   username: string;
   password: string;
-  email: string;
-  phone: string;
-  paymentStatus: PaymentStatus;
 }
 
 
@@ -33,9 +30,6 @@ function UserModal({ user, onClose, onSave, fieldErrors }: UserModalProps) {
     fullName: user?.fullName ?? '',
     username: user?.username ?? '',
     password: '',
-    email: user?.email ?? '',
-    phone: user?.phone ?? '',
-    paymentStatus: user?.paymentStatus ?? 'PENDING',
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof UserFormData, string>>>({});
@@ -62,9 +56,6 @@ function UserModal({ user, onClose, onSave, fieldErrors }: UserModalProps) {
     if (!form.fullName) nextErrors.fullName = 'Completá tu nombre para continuar.';
     if (!form.username) nextErrors.username = 'Completá tu usuario.';
     if (!user && form.password.length < 4) nextErrors.password = 'La contraseña debe tener al menos 4 caracteres.';
-    // simple email regex
-    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) nextErrors.email = 'Ingresá un email válido.';
-    if (form.phone && !/^[0-9]{8,15}$/.test(form.phone)) nextErrors.phone = 'Ingresá un número de teléfono válido.';
 
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors);
@@ -105,14 +96,15 @@ function UserModal({ user, onClose, onSave, fieldErrors }: UserModalProps) {
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-600 mb-1">
-                Contraseña {!user && '*'}
+                Contraseña / documento {!user && '*'}
               </label>
               <div className="relative">
                 <input
                   {...field('password')}
                   type={showPass ? 'text' : 'password'}
+                  inputMode="numeric"
                   className="w-full px-3 py-2 pr-10 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder={user ? 'Dejar vacío para no cambiar' : '••••••••'}
+                  placeholder={user ? 'Dejar vacío para no cambiar' : 'Documento o clave'}
                 />
                 <button
                   type="button"
@@ -123,35 +115,6 @@ function UserModal({ user, onClose, onSave, fieldErrors }: UserModalProps) {
                 </button>
               </div>
               {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password}</p>}
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">Teléfono</label>
-              <input
-                {...field('phone')}
-                className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="11xxxxxxxx"
-              />
-              {errors.phone && <p className="mt-1 text-xs text-red-500">{errors.phone}</p>}
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">Email</label>
-              <input
-                {...field('email')}
-                type="email"
-                className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="juan@email.com"
-              />
-              {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email}</p>}
-            </div>
-            <div className="sm:col-span-2">
-              <label className="block text-xs font-semibold text-slate-600 mb-1">Estado de pago</label>
-              <select
-                {...field('paymentStatus')}
-                className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-              >
-                <option value="PENDING">Pendiente</option>
-                <option value="PAID">Pagó</option>
-              </select>
             </div>
           </div>
           <div className="flex flex-col gap-3 pt-2 sm:flex-row">
@@ -194,9 +157,7 @@ export function AdminUsersPage() {
         await usersService.update(modal.user.id, {
           fullName: data.fullName,
           username: data.username,
-          email: data.email || undefined,
-          phone: data.phone || undefined,
-          paymentStatus: data.paymentStatus,
+          password: data.password || undefined,
         });
         showSuccessToast('Usuario actualizado correctamente.');
       } else {
@@ -204,13 +165,8 @@ export function AdminUsersPage() {
           fullName: data.fullName,
           username: data.username,
           password: data.password,
-          email: data.email || undefined,
-          phone: data.phone || undefined,
-          paymentStatus: data.paymentStatus,
-          role: 'USER',
-          isActive: true,
         });
-        showSuccessToast('Participación registrada correctamente.');
+        showSuccessToast('Usuario creado correctamente.');
       }
       void refresh();
       setModal({ open: false });
@@ -238,7 +194,7 @@ export function AdminUsersPage() {
     <AppLayout variant="admin">
       <PageHeader
         title="Usuarios"
-        subtitle={`${users.length} participantes registrados`}
+        subtitle={`${users.length} usuarios registrados`}
         action={
           <button
             onClick={() => setModal({ open: true })}
@@ -254,7 +210,7 @@ export function AdminUsersPage() {
         {users.length === 0 ? (
           <EmptyState
             icon="👥"
-            title="No hay participantes"
+            title="No hay usuarios"
             description="Creá el primer usuario para comenzar."
             action={
               <button
@@ -273,8 +229,6 @@ export function AdminUsersPage() {
                 <tr className="bg-slate-50 border-b border-slate-100">
                   <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Nombre</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide hidden sm:table-cell">Usuario</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide hidden md:table-cell">Contacto</th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wide">Pago</th>
                   <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wide">Estado</th>
                   <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wide">Acciones</th>
                 </tr>
@@ -295,13 +249,6 @@ export function AdminUsersPage() {
                     </td>
                     <td className="px-4 py-3.5 hidden sm:table-cell">
                       <span className="text-sm text-slate-600 font-mono">@{user.username}</span>
-                    </td>
-                    <td className="px-4 py-3.5 hidden md:table-cell">
-                      <p className="text-xs text-slate-500">{user.phone || '—'}</p>
-                      <p className="text-xs text-slate-400">{user.email || '—'}</p>
-                    </td>
-                    <td className="px-4 py-3.5 text-center">
-                      <PaymentStatusBadge status={user.paymentStatus} />
                     </td>
                     <td className="px-4 py-3.5 text-center">
                       <ActiveBadge isActive={user.isActive} />
@@ -350,13 +297,7 @@ export function AdminUsersPage() {
                     </div>
 
                     <div className="mt-3 flex flex-wrap gap-2">
-                      <PaymentStatusBadge status={user.paymentStatus} />
                       <ActiveBadge isActive={user.isActive} />
-                    </div>
-
-                    <div className="mt-3 text-xs text-slate-500 space-y-1">
-                      <p>{user.phone || '—'}</p>
-                      <p className="truncate">{user.email || '—'}</p>
                     </div>
                   </div>
 

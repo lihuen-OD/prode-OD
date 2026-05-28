@@ -2,6 +2,17 @@ import { prisma } from '../../config/prisma.js';
 import { AppError } from '../../utils/AppError.js';
 import { upsertBulkPredictions } from '../predictions/predictions.service.js';
 
+type MatchRow = {
+  id: string;
+  groupName: string;
+  matchDate: Date;
+  status: string;
+  result: 'HOME' | 'DRAW' | 'AWAY' | null;
+  homeTeam: { id: string; name: string; shortName?: string | null; flagUrl?: string | null };
+  awayTeam: { id: string; name: string; shortName?: string | null; flagUrl?: string | null };
+  predictions: Array<{ id: string; choice: 'HOME' | 'DRAW' | 'AWAY'; points: number; isCorrect?: boolean | null }>;
+};
+
 export async function getMeDashboard(userId: string) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -10,7 +21,6 @@ export async function getMeDashboard(userId: string) {
       fullName: true,
       username: true,
       role: true,
-      paymentStatus: true,
       isActive: true,
     },
   });
@@ -90,7 +100,7 @@ export async function getMeDashboard(userId: string) {
     prisma.match.count({ where: { tournamentId: tournament.id } }),
   ]);
 
-  const myPredictionCount = snapshot?.predictedCount ?? matches.filter(match => match.predictions.length > 0).length;
+  const myPredictionCount = snapshot?.predictedCount ?? matches.filter((match: MatchRow) => match.predictions.length > 0).length;
 
   return {
     user,
@@ -102,7 +112,7 @@ export async function getMeDashboard(userId: string) {
       predictedCount: snapshot?.predictedCount ?? myPredictionCount,
       pendingPredictions: Math.max(totalMatches - (snapshot?.predictedCount ?? myPredictionCount), 0),
     },
-    matches: matches.map(match => {
+    matches: matches.map((match: MatchRow) => {
       const prediction = match.predictions[0] ?? null;
       return {
         id: match.id,

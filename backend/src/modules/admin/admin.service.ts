@@ -1,4 +1,11 @@
 import { prisma } from '../../config/prisma.js';
+type TopRankingEntry = {
+  position: number;
+  points: number;
+  correctCount: number;
+  predictedCount: number;
+  user: { fullName: string; username: string };
+};
 import { getAdminUserStats } from '../users/users.service.js';
 import { getMatchStats, getLastResults } from '../matches/matches.service.js';
 import { AppError } from '../../utils/AppError.js';
@@ -46,15 +53,13 @@ export async function getAdminDashboard() {
   return {
     stats: {
       totalUsers: userStats.totalUsers,
-      paidUsers: userStats.paidUsers,
-      pendingUsers: userStats.pendingUsers,
       activeUsers: userStats.activeUsers,
       totalMatches: matchStats.totalMatches,
       finishedMatches: matchStats.finishedMatches,
       totalPredictions: matchStats.totalPredictions,
     },
     tournament,
-    topRanking: topRanking.map(entry => ({
+    topRanking: topRanking.map((entry: TopRankingEntry) => ({
       position: entry.position,
       fullName: entry.user.fullName,
       username: entry.user.username,

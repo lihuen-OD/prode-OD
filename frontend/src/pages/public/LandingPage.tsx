@@ -51,10 +51,10 @@ export function LandingPage() {
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center animate-fade-in-up delay-300 max-w-md mx-auto sm:max-w-none">
             <Link
-              to="/participar"
+              to="/login"
               className="inline-flex items-center justify-center gap-2 bg-white text-blue-800 hover:bg-blue-50 font-bold px-6 sm:px-8 py-3.5 rounded-2xl text-base shadow-xl hover:shadow-2xl transition-all hover:-translate-y-0.5 w-full sm:w-auto"
             >
-              Participar ahora
+              Iniciar sesión
               <ChevronRight className="w-4 h-4" />
             </Link>
             <Link

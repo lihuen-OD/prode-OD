@@ -186,7 +186,7 @@ export const matchesService = {
       };
     }
 
-    const response = await apiFetch<{ stats: { totalUsers: number; paidUsers: number; pendingUsers: number; activeUsers: number; totalMatches: number; finishedMatches: number; totalPredictions: number } }>('/admin/dashboard');
+    const response = await apiFetch<{ stats: { totalMatches: number; finishedMatches: number } }>('/admin/dashboard');
     return {
       total: response.stats.totalMatches,
       scheduled: response.stats.totalMatches - response.stats.finishedMatches,

@@ -79,6 +79,7 @@ export function AdminDashboardPage() {
 
   const isOpen = dashboard.tournament.status === 'OPEN' && new Date() < new Date(dashboard.tournament.predictionsCloseAt);
   const countdown = getCountdown(dashboard.tournament.predictionsCloseAt);
+  const pendingUsers = Math.max(dashboard.stats.totalUsers - dashboard.stats.activeUsers, 0);
 
   const handleSaveSettings = async (nextStatus: 'OPEN' | 'CLOSED') => {
     if (!closeAt) {
@@ -141,7 +142,7 @@ export function AdminDashboardPage() {
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 mb-6">
         <div className="flex items-start justify-between gap-4 mb-4">
           <div>
-            <h2 className="text-base font-bold text-slate-800">Control de apuestas</h2>
+            <h2 className="text-base font-bold text-slate-800">Control del torneo</h2>
             <p className="text-xs text-slate-500 mt-1">Podés abrir o cerrar el prode manualmente, y también mover la fecha de cierre.</p>
           </div>
           <StatusBadge type="prode" value={dashboard.tournament.status} />
@@ -190,7 +191,7 @@ export function AdminDashboardPage() {
           value={dashboard.stats.totalUsers}
           icon={<Users className="w-4 h-4 text-blue-600" />}
           color="bg-blue-50"
-          sub={`${dashboard.stats.activeUsers} activos · ${dashboard.stats.pendingUsers} pago pendiente`}
+          sub={`${dashboard.stats.activeUsers} activos · ${pendingUsers} pendientes`}
           href="/admin/usuarios"
         />
         <AdminStatCard
@@ -198,7 +199,7 @@ export function AdminDashboardPage() {
           value={dashboard.stats.activeUsers}
           icon={<CheckCircle className="w-4 h-4 text-emerald-600" />}
           color="bg-emerald-50"
-          sub={`${dashboard.stats.paidUsers} pagaron`}
+          sub={`${pendingUsers} pendientes`}
         />
         <AdminStatCard
           label="Partidos"
@@ -224,11 +225,11 @@ export function AdminDashboardPage() {
           sub={`De ${dashboard.stats.activeUsers} participantes activos`}
         />
         <AdminStatCard
-          label="Pago pendiente"
-          value={dashboard.stats.pendingUsers}
+          label="Pendientes"
+          value={pendingUsers}
           icon={<Users className="w-4 h-4 text-orange-600" />}
           color="bg-orange-50"
-          sub="Usuarios sin confirmar pago"
+          sub="Usuarios por revisar"
           href="/admin/usuarios"
         />
       </div>

@@ -1,4 +1,4 @@
-import { TournamentStatus, PaymentStatus, PredictionChoice } from '@prisma/client';
+import { TournamentStatus, PredictionChoice } from '@prisma/client';
 import { prisma } from '../../config/prisma.js';
 import { AppError } from '../../utils/AppError.js';
 import { recalculateRankingSnapshotsWithClient } from '../../utils/ranking.js';
@@ -13,9 +13,7 @@ export async function upsertBulkPredictions(userId: string, items: Array<{ match
     throw new AppError('Solo los usuarios participantes pueden pronosticar', 403);
   }
 
-  if (user.paymentStatus !== PaymentStatus.PAID) {
-    throw new AppError('Debés tener el pago confirmado para pronosticar', 403);
-  }
+  // Payment requirement removed: allow active users to predict
 
   const tournament = await prisma.tournament.findFirst({ orderBy: { createdAt: 'desc' } });
   if (!tournament) {

@@ -22,7 +22,6 @@ async function main() {
       email: seedAdmin.ADMIN_EMAIL,
       passwordHash,
       role: 'ADMIN',
-      paymentStatus: 'PAID',
       isActive: true,
     },
     create: {
@@ -31,7 +30,6 @@ async function main() {
       passwordHash,
       email: seedAdmin.ADMIN_EMAIL,
       role: 'ADMIN',
-      paymentStatus: 'PAID',
       isActive: true,
     },
   });

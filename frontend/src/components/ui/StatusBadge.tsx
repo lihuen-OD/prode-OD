@@ -1,9 +1,9 @@
 import { clsx } from 'clsx';
-import type { MatchStatus, PredictionChoice, PaymentStatus, UserRole } from '../../types';
+import type { MatchStatus, PredictionChoice, UserRole } from '../../types';
 
 interface StatusBadgeProps {
   type: 'match' | 'prediction' | 'payment' | 'role' | 'prode';
-  value: MatchStatus | PredictionChoice | PaymentStatus | UserRole | 'OPEN' | 'CLOSED' | boolean;
+  value: MatchStatus | PredictionChoice | UserRole | 'OPEN' | 'CLOSED' | boolean;
   className?: string;
 }
 
@@ -27,11 +27,6 @@ export function StatusBadge({ type, value, className }: StatusBadgeProps) {
     const cfg = matchStatusConfig[value as MatchStatus];
     label = cfg.label;
     badgeClass = cfg.className;
-  } else if (type === 'payment') {
-    label = value === 'PAID' ? 'Pagó' : 'Pendiente';
-    badgeClass = value === 'PAID'
-      ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
-      : 'bg-amber-100 text-amber-800 border border-amber-200';
   } else if (type === 'role') {
     label = value === 'ADMIN' ? 'Admin' : 'Participante';
     badgeClass = value === 'ADMIN'
@@ -60,11 +55,6 @@ export function StatusBadge({ type, value, className }: StatusBadgeProps) {
       {label}
     </span>
   );
-}
-
-/** Payment status badge */
-export function PaymentStatusBadge({ status }: { status: PaymentStatus }) {
-  return <StatusBadge type="payment" value={status} />;
 }
 
 /** Active / Inactive user badge */

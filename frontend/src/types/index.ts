@@ -2,7 +2,6 @@
 
 export type UserRole = 'ADMIN' | 'USER';
 
-export type PaymentStatus = 'PAID' | 'PENDING';
 
 export type MatchStatus = 'SCHEDULED' | 'LIVE' | 'FINISHED';
 
@@ -19,7 +18,6 @@ export interface User {
   email?: string;
   phone?: string;
   role: UserRole;
-  paymentStatus: PaymentStatus;
   isActive: boolean;
   createdAt: string;
 }

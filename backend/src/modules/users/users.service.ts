@@ -13,7 +13,6 @@ const participantSelect = {
   phone: true,
   email: true,
   role: true,
-  paymentStatus: true,
   isActive: true,
   createdAt: true,
   updatedAt: true,
@@ -75,10 +74,6 @@ export async function createParticipantUser(data: {
   fullName: string;
   username: string;
   password: string;
-  phone?: string;
-  email?: string;
-  paymentStatus: 'PAID' | 'PENDING';
-  isActive: boolean;
   role?: UserRole;
 }) {
   if (data.role && data.role !== 'USER') {
@@ -97,11 +92,8 @@ export async function createParticipantUser(data: {
         fullName: data.fullName,
         username: data.username,
         passwordHash,
-        phone: data.phone || null,
-        email: data.email || null,
         role: 'USER',
-        paymentStatus: data.paymentStatus,
-        isActive: data.isActive,
+        isActive: true,
       },
       select: participantSelect,
     });
@@ -118,9 +110,6 @@ export async function updateParticipantUser(id: string, data: Partial<{
   fullName: string;
   username: string;
   password: string;
-  phone: string | null;
-  email: string | null;
-  paymentStatus: 'PAID' | 'PENDING';
   isActive: boolean;
 }>) {
   const current = await prisma.user.findUnique({ where: { id } });
@@ -147,9 +136,6 @@ export async function updateParticipantUser(id: string, data: Partial<{
       data: {
         ...(data.fullName !== undefined ? { fullName: data.fullName } : {}),
         ...(data.username !== undefined ? { username: data.username } : {}),
-        ...(data.phone !== undefined ? { phone: data.phone || null } : {}),
-        ...(data.email !== undefined ? { email: data.email || null } : {}),
-        ...(data.paymentStatus !== undefined ? { paymentStatus: data.paymentStatus } : {}),
         ...(data.isActive !== undefined ? { isActive: data.isActive } : {}),
         ...(nextPasswordHash ? { passwordHash: nextPasswordHash } : {}),
       },
@@ -203,17 +189,13 @@ export async function getUserById(id: string) {
 }
 
 export async function getAdminUserStats() {
-  const [totalUsers, paidUsers, pendingUsers, activeUsers] = await Promise.all([
+  const [totalUsers, activeUsers] = await Promise.all([
     prisma.user.count({ where: { role: 'USER' } }),
-    prisma.user.count({ where: { role: 'USER', paymentStatus: 'PAID' } }),
-    prisma.user.count({ where: { role: 'USER', paymentStatus: 'PENDING' } }),
     prisma.user.count({ where: { role: 'USER', isActive: true } }),
   ]);
 
   return {
     totalUsers,
-    paidUsers,
-    pendingUsers,
     activeUsers,
   };
 }

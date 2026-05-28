@@ -27,8 +27,6 @@ export async function getAdminDashboard() {
   return {
     stats: {
       totalUsers: userStats.total,
-      paidUsers: userStats.paid,
-      pendingUsers: userStats.pending,
       activeUsers: userStats.active,
       totalMatches: matchStats.total,
       finishedMatches: matchStats.finished,
