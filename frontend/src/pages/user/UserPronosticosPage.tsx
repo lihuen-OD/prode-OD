@@ -9,16 +9,28 @@ import { useProdeStatus } from '../../hooks/useProdeStatus';
 import { matchesService } from '../../services/matchesService';
 import { predictionsService } from '../../services/predictionsService';
 import { extractError, showErrorToast } from '../../utils/errorHandler';
-import type { Match, Prediction, PredictionChoice } from '../../types';
+import type { Match, MatchPhase, Prediction, PredictionChoice } from '../../types';
+
+const phaseOrder: MatchPhase[] = ['GROUP', 'ROUND_OF_32', 'ROUND_OF_16', 'QUARTER_FINAL', 'SEMI_FINAL', 'THIRD_PLACE', 'FINAL'];
+
+const phaseLabels: Record<MatchPhase, string> = {
+  GROUP: 'Fase de grupos',
+  ROUND_OF_32: '32avos',
+  ROUND_OF_16: 'Octavos',
+  QUARTER_FINAL: 'Cuartos',
+  SEMI_FINAL: 'Semifinales',
+  THIRD_PLACE: 'Tercer puesto',
+  FINAL: 'Final',
+};
 
 export function UserPronosticosPage() {
   const { user } = useAuth();
   const { isOpen, isLoading: isStatusLoading } = useProdeStatus();
-  const allGroups = useMemo(() => ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'], []);
   const [matches, setMatches] = useState<Match[]>([]);
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [isInitialLoading, setIsInitialLoading] = useState<boolean>(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [activePhase, setActivePhase] = useState<MatchPhase>('GROUP');
   const [activeGroup, setActiveGroup] = useState<string>('');
 
   useEffect(() => {
@@ -56,7 +68,10 @@ export function UserPronosticosPage() {
     };
   }, [user]);
 
-  const groups = allGroups;
+  const phases = useMemo(() => phaseOrder.filter(phase => matches.some(match => match.phase === phase)), [matches]);
+  const phaseMatches = matches.filter(match => match.phase === activePhase);
+  const groupMatchesForPhase = phaseMatches.filter(match => match.phase === 'GROUP');
+  const groups = useMemo(() => [...new Set(groupMatchesForPhase.map(match => match.group).filter(Boolean))] as string[], [groupMatchesForPhase]);
   const selectedGroup = groups.includes(activeGroup) ? activeGroup : groups[0] ?? '';
 
   const getPrediction = (matchId: string) => predictions.find(prediction => prediction.matchId === matchId);
@@ -90,7 +105,9 @@ export function UserPronosticosPage() {
     }
   };
 
-  const groupMatches = matches.filter(match => match.group === selectedGroup);
+  const visibleMatches = activePhase === 'GROUP'
+    ? phaseMatches.filter(match => match.group === selectedGroup)
+    : phaseMatches;
   const predicted = predictions.length;
   const total = matches.length;
   const isPageLoading = isInitialLoading || isStatusLoading;
@@ -124,17 +141,22 @@ export function UserPronosticosPage() {
               className="flex w-full max-w-full min-w-0 flex-nowrap gap-2 overflow-x-auto overflow-y-hidden pb-2 pr-4 whitespace-nowrap overscroll-x-contain scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
               style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-x pan-y' }}
             >
-              {groups.map(group => (
+              {phases.map(phase => (
                 <button
-                  key={group}
-                  onClick={() => setActiveGroup(group)}
+                  key={phase}
+                  onClick={() => {
+                    setActivePhase(phase);
+                    if (phase !== 'GROUP') {
+                      setActiveGroup('');
+                    }
+                  }}
                   className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-                    selectedGroup === group
+                    activePhase === phase
                       ? 'bg-blue-700 text-white shadow-sm'
                       : 'bg-white text-slate-600 border border-slate-200 hover:border-blue-300 hover:bg-blue-50'
                   }`}
                 >
-                  Grupo {group}
+                  {phaseLabels[phase]}
                 </button>
               ))}
             </div>
@@ -142,21 +164,46 @@ export function UserPronosticosPage() {
             <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-slate-50 to-transparent" />
           </div>
 
-          {groupMatches.length === 0 ? (
+          {activePhase === 'GROUP' && groups.length > 0 && (
+            <div className="relative mb-6 min-w-0">
+              <div
+                className="flex w-full max-w-full min-w-0 flex-nowrap gap-2 overflow-x-auto overflow-y-hidden pb-2 pr-4 whitespace-nowrap overscroll-x-contain scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-x pan-y' }}
+              >
+                {groups.map(group => (
+                  <button
+                    key={group}
+                    onClick={() => setActiveGroup(group)}
+                    className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                      selectedGroup === group
+                        ? 'bg-blue-700 text-white shadow-sm'
+                        : 'bg-white text-slate-600 border border-slate-200 hover:border-blue-300 hover:bg-blue-50'
+                    }`}
+                  >
+                    Grupo {group}
+                  </button>
+                ))}
+              </div>
+              <div className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-slate-50 to-transparent" />
+              <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-slate-50 to-transparent" />
+            </div>
+          )}
+
+          {visibleMatches.length === 0 ? (
             <EmptyState
               icon="📋"
-              title="No hay partidos en este grupo"
+              title={activePhase === 'GROUP' ? 'No hay partidos en este grupo' : 'No hay partidos en esta fase'}
               description="Los partidos se cargarán próximamente."
             />
           ) : (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3">
-              {groupMatches.map(match => (
+              {visibleMatches.map(match => (
                 <MatchCard
                   key={match.id}
                   match={match}
                   prediction={getPrediction(match.id)}
                   onPredict={handlePredict}
-                  disabled={!isOpen || match.status === 'FINISHED'}
+                  disabled={!isOpen || !['OPEN', 'SCHEDULED'].includes(match.status)}
                   showResult={match.status === 'FINISHED'}
                 />
               ))}

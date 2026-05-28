@@ -4,12 +4,20 @@ import { upsertBulkPredictions } from '../predictions/predictions.service.js';
 
 type MatchRow = {
   id: string;
-  groupName: string;
-  matchDate: Date;
+  groupName: string | null;
+  phase: 'GROUP' | 'ROUND_OF_32' | 'ROUND_OF_16' | 'QUARTER_FINAL' | 'SEMI_FINAL' | 'THIRD_PLACE' | 'FINAL';
+  startTime: Date;
+  predictionDeadline: Date;
   status: string;
   result: 'HOME' | 'DRAW' | 'AWAY' | null;
+  homeScore: number | null;
+  awayScore: number | null;
+  winnerTeamId: string | null;
+  homePlaceholder: string | null;
+  awayPlaceholder: string | null;
   homeTeam: { id: string; name: string; shortName?: string | null; flagUrl?: string | null };
   awayTeam: { id: string; name: string; shortName?: string | null; flagUrl?: string | null };
+  winnerTeam?: { id: string; name: string; shortName?: string | null; flagUrl?: string | null } | null;
   predictions: Array<{ id: string; choice: 'HOME' | 'DRAW' | 'AWAY'; points: number; isCorrect?: boolean | null }>;
 };
 
@@ -63,9 +71,16 @@ export async function getMeDashboard(userId: string) {
       select: {
         id: true,
         groupName: true,
-        matchDate: true,
+        phase: true,
+        startTime: true,
+        predictionDeadline: true,
         status: true,
         result: true,
+        homeScore: true,
+        awayScore: true,
+        winnerTeamId: true,
+        homePlaceholder: true,
+        awayPlaceholder: true,
         homeTeam: {
           select: {
             id: true,
@@ -75,6 +90,14 @@ export async function getMeDashboard(userId: string) {
           },
         },
         awayTeam: {
+          select: {
+            id: true,
+            name: true,
+            shortName: true,
+            flagUrl: true,
+          },
+        },
+        winnerTeam: {
           select: {
             id: true,
             name: true,
@@ -93,8 +116,7 @@ export async function getMeDashboard(userId: string) {
         },
       },
       orderBy: [
-        { groupName: 'asc' },
-        { matchDate: 'asc' },
+        { startTime: 'asc' },
       ],
     }),
     prisma.match.count({ where: { tournamentId: tournament.id } }),
@@ -117,11 +139,20 @@ export async function getMeDashboard(userId: string) {
       return {
         id: match.id,
         groupName: match.groupName,
+        phase: match.phase,
         homeTeam: match.homeTeam,
         awayTeam: match.awayTeam,
-        matchDate: match.matchDate,
+        matchDate: match.startTime,
+        startTime: match.startTime,
+        predictionDeadline: match.predictionDeadline,
         status: match.status,
         result: match.result,
+        homeScore: match.homeScore,
+        awayScore: match.awayScore,
+        winnerTeamId: match.winnerTeamId,
+        homePlaceholder: match.homePlaceholder,
+        awayPlaceholder: match.awayPlaceholder,
+        winnerTeam: match.winnerTeam ?? null,
         myPrediction: prediction ? {
           id: prediction.id,
           choice: prediction.choice,

@@ -31,18 +31,30 @@ function formatDateParts(value: string | Date) {
 }
 
 export function mapMatch(apiMatch: any): Match {
-  const parts = formatDateParts(apiMatch.matchDate);
+  const startTime = apiMatch.startTime ?? apiMatch.matchDate;
+  const parts = formatDateParts(startTime);
   return {
     id: apiMatch.id,
-    group: apiMatch.groupName,
-    homeTeam: apiMatch.homeTeam?.name ?? '',
-    awayTeam: apiMatch.awayTeam?.name ?? '',
+    group: apiMatch.groupName ?? null,
+    phase: apiMatch.phase ?? 'GROUP',
+    predictionType: apiMatch.predictionType ?? (apiMatch.phase && apiMatch.phase !== 'GROUP' ? 'QUALIFIER' : 'RESULT_1X2'),
+    homeTeamId: apiMatch.homeTeam?.id ?? undefined,
+    awayTeamId: apiMatch.awayTeam?.id ?? undefined,
+    homeTeam: apiMatch.homePlaceholder ?? apiMatch.homeTeam?.name ?? '',
+    awayTeam: apiMatch.awayPlaceholder ?? apiMatch.awayTeam?.name ?? '',
     homeFlag: apiMatch.homeTeam?.flagUrl ?? '???',
     awayFlag: apiMatch.awayTeam?.flagUrl ?? '???',
+    homePlaceholder: apiMatch.homePlaceholder ?? null,
+    awayPlaceholder: apiMatch.awayPlaceholder ?? null,
+    startTime,
+    predictionDeadline: apiMatch.predictionDeadline ?? startTime,
     date: parts.date,
     time: parts.time,
     status: apiMatch.status,
     result: apiMatch.result ?? undefined,
+    homeScore: apiMatch.homeScore ?? null,
+    awayScore: apiMatch.awayScore ?? null,
+    winnerTeamId: apiMatch.winnerTeamId ?? null,
     venue: apiMatch.venue ?? undefined,
   };
 }
@@ -75,10 +87,18 @@ export function mapRankingEntry(apiEntry: any): RankingEntry {
 
 export function mapSettings(apiSettings: any): AppSettings {
   return {
-    prodeClosesAt: apiSettings.predictionsCloseAt,
+    prodeClosesAt: apiSettings.predictionsCloseAt ?? null,
     worldCupStartsAt: apiSettings.predictionsCloseAt,
     resultSource: apiSettings.resultsSource,
     status: apiSettings.status,
+    nextClosingMatch: apiSettings.nextClosingMatch ? {
+      id: apiSettings.nextClosingMatch.id,
+      phase: apiSettings.nextClosingMatch.phase,
+      predictionDeadline: apiSettings.nextClosingMatch.predictionDeadline,
+      startTime: apiSettings.nextClosingMatch.startTime,
+      homeTeamName: apiSettings.nextClosingMatch.homeTeamName,
+      awayTeamName: apiSettings.nextClosingMatch.awayTeamName,
+    } : null,
   };
 }
 

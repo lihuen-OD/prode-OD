@@ -1,8 +1,9 @@
-import { PredictionChoice, MatchStatus } from '@prisma/client';
+import { MatchPhase, MatchStatus, PredictionChoice, PredictionType } from '@prisma/client';
 import { prisma } from '../../config/prisma.js';
 import { AppError } from '../../utils/AppError.js';
 import { recalculateRankingSnapshotsWithClient } from '../../utils/ranking.js';
 import { parseArgentinaDateTime } from '../../utils/timezone.js';
+import { canPredict, calculatePredictionPoints, getGroupResult, getPredictionDeadline, getPredictionTypeForPhase, MATCH_PHASE_ORDER } from '../../utils/matchRules.js';
 
 const teamSelect = {
   id: true,
@@ -11,27 +12,67 @@ const teamSelect = {
   flagUrl: true,
 } as const;
 
+const matchSelect = {
+  id: true,
+  tournamentId: true,
+  groupName: true,
+  phase: true,
+  predictionType: true,
+  startTime: true,
+  predictionDeadline: true,
+  homeScore: true,
+  awayScore: true,
+  winnerTeamId: true,
+  homePlaceholder: true,
+  awayPlaceholder: true,
+  venue: true,
+  status: true,
+  result: true,
+  homeTeam: { select: teamSelect },
+  awayTeam: { select: teamSelect },
+  winnerTeam: { select: teamSelect },
+} as const;
+
 function mapMatch(match: {
   id: string;
   tournamentId: string;
-  groupName: string;
-  matchDate: Date;
+  groupName: string | null;
+  phase: MatchPhase;
+  predictionType: PredictionType;
+  startTime: Date;
+  predictionDeadline: Date;
+  homeScore: number | null;
+  awayScore: number | null;
+  winnerTeamId: string | null;
+  homePlaceholder: string | null;
+  awayPlaceholder: string | null;
   venue: string | null;
   status: MatchStatus;
   result: PredictionChoice | null;
   homeTeam: { id: string; name: string; shortName: string | null; flagUrl: string | null };
   awayTeam: { id: string; name: string; shortName: string | null; flagUrl: string | null };
+  winnerTeam?: { id: string; name: string; shortName: string | null; flagUrl: string | null } | null;
 }) {
   return {
     id: match.id,
     tournamentId: match.tournamentId,
     groupName: match.groupName,
-    matchDate: match.matchDate,
+    phase: match.phase,
+    predictionType: match.predictionType,
+    startTime: match.startTime,
+    matchDate: match.startTime,
+    predictionDeadline: match.predictionDeadline,
+    homeScore: match.homeScore,
+    awayScore: match.awayScore,
+    winnerTeamId: match.winnerTeamId,
+    homePlaceholder: match.homePlaceholder,
+    awayPlaceholder: match.awayPlaceholder,
     venue: match.venue,
     status: match.status,
     result: match.result,
     homeTeam: match.homeTeam,
     awayTeam: match.awayTeam,
+    winnerTeam: match.winnerTeam ?? null,
   };
 }
 
@@ -51,40 +92,62 @@ async function upsertTeam(team: { name: string; shortName?: string | null; flagU
   });
 }
 
-export async function listAdminMatches(filters: { group?: string; status?: MatchStatus }) {
+export async function listAdminMatches(filters: { group?: string; phase?: MatchPhase; status?: MatchStatus }) {
   const matches = await prisma.match.findMany({
     where: {
       ...(filters.group ? { groupName: filters.group } : {}),
+      ...(filters.phase ? { phase: filters.phase } : {}),
       ...(filters.status ? { status: filters.status } : {}),
     },
-    orderBy: [{ groupName: 'asc' }, { matchDate: 'asc' }],
-    select: {
-      id: true,
-      tournamentId: true,
-      groupName: true,
-      matchDate: true,
-      venue: true,
-      status: true,
-      result: true,
-      homeTeam: { select: teamSelect },
-      awayTeam: { select: teamSelect },
-    },
+    orderBy: [{ startTime: 'asc' }],
+    select: matchSelect,
   });
 
-  return { matches: matches.map(mapMatch) };
+  return {
+    matches: matches
+      .map(mapMatch)
+      .sort((a, b) => {
+        const phaseDiff = MATCH_PHASE_ORDER.indexOf(a.phase) - MATCH_PHASE_ORDER.indexOf(b.phase);
+        if (phaseDiff !== 0) return phaseDiff;
+        const groupA = a.groupName ?? '';
+        const groupB = b.groupName ?? '';
+        const groupDiff = groupA.localeCompare(groupB, 'es', { numeric: true });
+        if (groupDiff !== 0) return groupDiff;
+        return a.startTime.getTime() - b.startTime.getTime();
+      }),
+  };
 }
 
 export async function createAdminMatch(data: {
   tournamentId: string;
-  groupName: string;
+  groupName?: string | null;
+  phase: MatchPhase;
+  predictionType?: PredictionType;
   homeTeam: { name: string; shortName?: string | null; flagUrl?: string | null };
   awayTeam: { name: string; shortName?: string | null; flagUrl?: string | null };
-  matchDate: string;
+  startTime?: string;
+  matchDate?: string;
   status?: MatchStatus;
   venue?: string | null;
+  homePlaceholder?: string | null;
+  awayPlaceholder?: string | null;
 }) {
   if (data.homeTeam.name === data.awayTeam.name) {
     throw new AppError('El local y el visitante no pueden ser el mismo equipo', 400);
+  }
+
+  if (!data.phase) {
+    throw new AppError('La fase es obligatoria', 400);
+  }
+
+  const startValue = data.startTime ?? data.matchDate;
+  if (!startValue) {
+    throw new AppError('La fecha y hora de inicio es obligatoria', 400);
+  }
+
+  const startTime = parseArgentinaDateTime(startValue);
+  if (Number.isNaN(startTime.getTime())) {
+    throw new AppError('La fecha y hora de inicio no es válida', 400);
   }
 
   const tournament = await prisma.tournament.findUnique({ where: { id: data.tournamentId } });
@@ -100,24 +163,19 @@ export async function createAdminMatch(data: {
   const match = await prisma.match.create({
     data: {
       tournamentId: data.tournamentId,
-      groupName: data.groupName,
+      groupName: data.phase === 'GROUP' ? (data.groupName ?? null) : (data.groupName ?? null),
+      phase: data.phase,
+      predictionType: data.predictionType ?? getPredictionTypeForPhase(data.phase),
       homeTeamId: homeTeam.id,
       awayTeamId: awayTeam.id,
-      matchDate: parseArgentinaDateTime(data.matchDate),
+      startTime,
+      predictionDeadline: getPredictionDeadline(startTime),
+      homePlaceholder: data.homePlaceholder ?? null,
+      awayPlaceholder: data.awayPlaceholder ?? null,
       venue: data.venue ?? null,
-      status: data.status ?? 'SCHEDULED',
+      status: data.status ?? 'OPEN',
     },
-    select: {
-      id: true,
-      tournamentId: true,
-      groupName: true,
-      matchDate: true,
-      venue: true,
-      status: true,
-      result: true,
-      homeTeam: { select: teamSelect },
-      awayTeam: { select: teamSelect },
-    },
+    select: matchSelect,
   });
 
   return mapMatch(match);
@@ -125,12 +183,17 @@ export async function createAdminMatch(data: {
 
 export async function updateAdminMatch(id: string, data: {
   tournamentId?: string;
-  groupName?: string;
+  groupName?: string | null;
+  phase?: MatchPhase;
+  predictionType?: PredictionType;
   homeTeam?: { name: string; shortName?: string | null; flagUrl?: string | null };
   awayTeam?: { name: string; shortName?: string | null; flagUrl?: string | null };
+  startTime?: string;
   matchDate?: string;
   status?: MatchStatus;
   venue?: string | null;
+  homePlaceholder?: string | null;
+  awayPlaceholder?: string | null;
 }) {
   const current = await prisma.match.findUnique({
     where: { id },
@@ -148,6 +211,16 @@ export async function updateAdminMatch(id: string, data: {
     throw new AppError('El local y el visitante no pueden ser el mismo equipo', 400);
   }
 
+  if (current.status !== 'OPEN' && (data.homeTeam || data.awayTeam || data.phase || data.predictionType || data.startTime || data.matchDate || data.groupName || data.homePlaceholder || data.awayPlaceholder)) {
+    throw new AppError('No se pueden modificar los equipos, fase o fecha de un partido cerrado o finalizado', 403);
+  }
+
+  const startValue = data.startTime ?? data.matchDate;
+  const nextStartTime = startValue ? parseArgentinaDateTime(startValue) : current.startTime;
+  if (startValue && Number.isNaN(nextStartTime.getTime())) {
+    throw new AppError('La fecha y hora de inicio no es válida', 400);
+  }
+
   const homeTeam = data.homeTeam ? await upsertTeam(data.homeTeam) : current.homeTeam;
   const awayTeam = data.awayTeam ? await upsertTeam(data.awayTeam) : current.awayTeam;
 
@@ -156,23 +229,16 @@ export async function updateAdminMatch(id: string, data: {
     data: {
       ...(data.tournamentId ? { tournamentId: data.tournamentId } : {}),
       ...(data.groupName ? { groupName: data.groupName } : {}),
-      ...(data.matchDate ? { matchDate: parseArgentinaDateTime(data.matchDate) } : {}),
+      ...(data.phase ? { phase: data.phase, predictionType: data.predictionType ?? getPredictionTypeForPhase(data.phase) } : {}),
+      ...(startValue ? { startTime: nextStartTime, predictionDeadline: getPredictionDeadline(nextStartTime) } : {}),
       ...(data.status ? { status: data.status } : {}),
       ...(data.venue !== undefined ? { venue: data.venue } : {}),
+      ...(data.homePlaceholder !== undefined ? { homePlaceholder: data.homePlaceholder } : {}),
+      ...(data.awayPlaceholder !== undefined ? { awayPlaceholder: data.awayPlaceholder } : {}),
       homeTeamId: homeTeam.id,
       awayTeamId: awayTeam.id,
     },
-    select: {
-      id: true,
-      tournamentId: true,
-      groupName: true,
-      matchDate: true,
-      venue: true,
-      status: true,
-      result: true,
-      homeTeam: { select: teamSelect },
-      awayTeam: { select: teamSelect },
-    },
+    select: matchSelect,
   });
 
   return mapMatch(updated);
@@ -197,49 +263,80 @@ export async function deleteAdminMatch(id: string) {
   });
 }
 
-export async function setMatchResult(id: string, result: PredictionChoice) {
+export async function setMatchResult(id: string, data: { homeScore: number; awayScore: number; winnerTeamId?: string | null }) {
   const match = await prisma.match.findUnique({
     where: { id },
-    select: { id: true, tournamentId: true, matchDate: true },
+    select: {
+      id: true,
+      tournamentId: true,
+      phase: true,
+      startTime: true,
+      predictionDeadline: true,
+      status: true,
+      homeTeamId: true,
+      awayTeamId: true,
+      homeScore: true,
+      awayScore: true,
+      winnerTeamId: true,
+    },
   });
 
   if (!match) {
     throw new AppError('Partido no encontrado', 404);
   }
 
-  if (match.matchDate > new Date()) {
-    throw new AppError('No podés cargar resultado de un partido que todavía no se jugó.', 400);
+  if (match.status === 'FINISHED') {
+    throw new AppError('El partido ya está finalizado', 400);
+  }
+
+  if (match.phase === 'GROUP') {
+    if (data.homeScore == null || data.awayScore == null) {
+      throw new AppError('Debés cargar los goles del partido', 400);
+    }
+  } else {
+    if (data.homeScore == null || data.awayScore == null || !data.winnerTeamId) {
+      throw new AppError('En eliminatorias debés indicar goles y equipo clasificado', 400);
+    }
+
+    if (![match.homeTeamId, match.awayTeamId].includes(data.winnerTeamId)) {
+      throw new AppError('El equipo clasificado no participa en este partido', 400);
+    }
   }
 
   const updated = await prisma.$transaction(async transaction => {
+    const finalWinnerTeamId = match.phase === 'GROUP'
+      ? null
+      : data.winnerTeamId ?? null;
+
     const finalMatch = await transaction.match.update({
       where: { id },
       data: {
         status: 'FINISHED',
-        result,
+        homeScore: data.homeScore,
+        awayScore: data.awayScore,
+        winnerTeamId: finalWinnerTeamId,
+        result: match.phase === 'GROUP'
+          ? getGroupResult(data.homeScore, data.awayScore)
+          : (finalWinnerTeamId === match.homeTeamId ? 'HOME' : 'AWAY'),
       },
-      select: {
-        id: true,
-        tournamentId: true,
-        groupName: true,
-        matchDate: true,
-        venue: true,
-        status: true,
-        result: true,
-        homeTeam: { select: teamSelect },
-        awayTeam: { select: teamSelect },
-      },
+      select: matchSelect,
     });
 
-    await transaction.prediction.updateMany({
-      where: { matchId: id, choice: result },
-      data: { points: 3, isCorrect: true },
+    const predictions = await transaction.prediction.findMany({
+      where: { matchId: id },
+      select: { id: true, choice: true },
     });
 
-    await transaction.prediction.updateMany({
-      where: { matchId: id, NOT: { choice: result } },
-      data: { points: 0, isCorrect: false },
-    });
+    for (const prediction of predictions) {
+      const points = calculatePredictionPoints(prediction, finalMatch);
+      await transaction.prediction.update({
+        where: { id: prediction.id },
+        data: {
+          points,
+          isCorrect: points > 0,
+        },
+      });
+    }
 
     const rows = await transaction.$queryRaw<Array<{
       userId: string;
@@ -314,12 +411,21 @@ export async function getLastResults(limit = 5) {
       id: true,
       tournamentId: true,
       groupName: true,
-      matchDate: true,
+      phase: true,
+      predictionType: true,
+      startTime: true,
+      predictionDeadline: true,
+      homeScore: true,
+      awayScore: true,
+      winnerTeamId: true,
+      homePlaceholder: true,
+      awayPlaceholder: true,
       venue: true,
       status: true,
       result: true,
       homeTeam: { select: teamSelect },
       awayTeam: { select: teamSelect },
+      winnerTeam: { select: teamSelect },
     },
   });
 

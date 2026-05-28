@@ -3,7 +3,11 @@
 export type UserRole = 'ADMIN' | 'USER';
 
 
-export type MatchStatus = 'SCHEDULED' | 'LIVE' | 'FINISHED';
+export type MatchStatus = 'OPEN' | 'LOCKED' | 'FINISHED' | 'SCHEDULED' | 'LIVE';
+
+export type MatchPhase = 'GROUP' | 'ROUND_OF_32' | 'ROUND_OF_16' | 'QUARTER_FINAL' | 'SEMI_FINAL' | 'THIRD_PLACE' | 'FINAL';
+
+export type MatchPredictionType = 'RESULT_1X2' | 'QUALIFIER';
 
 export type PredictionChoice = 'HOME' | 'DRAW' | 'AWAY';
 
@@ -34,16 +38,27 @@ export interface AuthUser {
 
 export interface Match {
   id: string;
-  group: string;
+  group: string | null;
+  phase: MatchPhase;
+  predictionType: MatchPredictionType;
+  homeTeamId?: string;
+  awayTeamId?: string;
   homeTeam: string;
   awayTeam: string;
   homeFlag: string;   // emoji flag
   awayFlag: string;
-  date: string;       // ISO date string
+  homePlaceholder?: string | null;
+  awayPlaceholder?: string | null;
+  startTime: string;   // ISO date string
+  predictionDeadline: string;
+  date: string;       // derived date string
   time: string;       // HH:mm
   status: MatchStatus;
   /** Real result set by admin (only populated for FINISHED matches) */
   result?: PredictionChoice;
+  homeScore?: number | null;
+  awayScore?: number | null;
+  winnerTeamId?: string | null;
   venue?: string;
 }
 
@@ -78,13 +93,21 @@ export interface RankingEntry {
 
 export interface AppSettings {
   /** ISO datetime — when predictions lock */
-  prodeClosesAt: string;
+  prodeClosesAt: string | null;
   /** ISO datetime — official World Cup start */
   worldCupStartsAt: string;
   /** Active result source */
   resultSource: ResultSource;
   /** Current manual state of the prode */
   status?: 'OPEN' | 'CLOSED' | 'FINISHED';
+  nextClosingMatch?: {
+    id: string;
+    phase: MatchPhase;
+    predictionDeadline: string;
+    startTime: string;
+    homeTeamName: string;
+    awayTeamName: string;
+  } | null;
 }
 
 // --- Admin Dashboard Stats ----------------------------------------------------

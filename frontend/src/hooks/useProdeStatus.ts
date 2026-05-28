@@ -8,6 +8,15 @@ export interface CountdownValues {
   seconds: number;
 }
 
+export interface NextClosingMatchSummary {
+  id: string;
+  phase: string;
+  predictionDeadline: string;
+  startTime: string;
+  homeTeamName: string;
+  awayTeamName: string;
+}
+
 function calculateCountdown(targetDate: string): CountdownValues {
   const diff = new Date(targetDate).getTime() - Date.now();
 
@@ -31,6 +40,7 @@ export function useProdeStatus() {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [countdown, setCountdown] = useState<CountdownValues>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const [nextClosingMatch, setNextClosingMatch] = useState<NextClosingMatchSummary | null>(null);
 
   useEffect(() => {
     let intervalId: ReturnType<typeof setInterval> | undefined;
@@ -39,11 +49,13 @@ export function useProdeStatus() {
     const update = async () => {
       try {
         const settings = await settingsService.get();
-        const targetTime = new Date(settings.prodeClosesAt).getTime();
+        const targetDeadline = settings.nextClosingMatch?.predictionDeadline ?? settings.prodeClosesAt;
+        const targetTime = targetDeadline ? new Date(targetDeadline).getTime() : 0;
+        setNextClosingMatch(settings.nextClosingMatch ?? null);
 
         const refresh = () => {
-          setCountdown(calculateCountdown(settings.prodeClosesAt));
-          setIsOpen((settings.status ?? 'OPEN') === 'OPEN' && Date.now() < targetTime);
+          setCountdown(targetDeadline ? calculateCountdown(targetDeadline) : { days: 0, hours: 0, minutes: 0, seconds: 0 });
+          setIsOpen(Boolean(targetDeadline) && Date.now() < targetTime);
         };
 
         if (!mounted) {
@@ -69,5 +81,5 @@ export function useProdeStatus() {
     };
   }, []);
 
-  return { isOpen, countdown, isLoading };
+  return { isOpen, countdown, isLoading, nextClosingMatch };
 }

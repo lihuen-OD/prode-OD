@@ -7,6 +7,16 @@ import type { PredictionChoice } from '../../types';
 import { formatTournamentDateLabel } from '../../utils/timezone';
 import { FlagIcon } from './FlagIcon';
 
+const phaseLabels: Record<Match['phase'], string> = {
+  GROUP: 'Fase de grupos',
+  ROUND_OF_32: '32avos de final',
+  ROUND_OF_16: 'Octavos de final',
+  QUARTER_FINAL: 'Cuartos de final',
+  SEMI_FINAL: 'Semifinales',
+  THIRD_PLACE: 'Tercer puesto',
+  FINAL: 'Final',
+};
+
 interface MatchCardProps {
   match: Match;
   prediction?: Prediction;
@@ -17,15 +27,9 @@ interface MatchCardProps {
 }
 
 const choiceLabel: Record<PredictionChoice, string> = {
-  HOME: 'Gana local',
+  HOME: 'Local',
   DRAW: 'Empate',
-  AWAY: 'Gana visitante',
-};
-
-const resultLabel: Record<PredictionChoice, string> = {
-  HOME: 'Ganó local',
-  DRAW: 'Empató',
-  AWAY: 'Ganó visitante',
+  AWAY: 'Visitante',
 };
 
 export function MatchCard({
@@ -38,6 +42,12 @@ export function MatchCard({
 }: MatchCardProps) {
   const hasResult = match.status === 'FINISHED' && match.result;
   const predictionCorrect = prediction?.isCorrect;
+  const isQualifier = match.phase !== 'GROUP';
+  const displayGroup = match.phase === 'GROUP' && match.group ? `Grupo ${match.group}` : phaseLabels[match.phase];
+  const selectedLabel = prediction ? (isQualifier ? (prediction.choice === 'HOME' ? match.homeTeam : match.awayTeam) : choiceLabel[prediction.choice]) : '';
+  const resultText = match.phase === 'GROUP'
+    ? (match.result === 'HOME' ? 'Ganó local' : match.result === 'DRAW' ? 'Empató' : 'Ganó visitante')
+    : (match.result === 'HOME' ? `Clasificó ${match.homeTeam}` : `Clasificó ${match.awayTeam}`);
 
   return (
     <div className={clsx(
@@ -51,7 +61,7 @@ export function MatchCard({
       {/* Header: group + status */}
       <div className="flex items-center justify-between mb-3">
         <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-100">
-          Grupo {match.group}
+          {displayGroup}
         </span>
         <StatusBadge type="match" value={match.status} />
       </div>
@@ -70,7 +80,7 @@ export function MatchCard({
               'mt-1 text-xs font-semibold px-2 py-0.5 rounded',
               'bg-blue-700 text-white'
             )}>
-              {resultLabel[match.result!]}
+              {resultText}
             </span>
           )}
         </div>
@@ -104,7 +114,7 @@ export function MatchCard({
         <div className="mt-3 pt-3 border-t border-slate-100">
           {disabled && prediction?.choice && (
             <p className="text-xs text-slate-400 mb-2 text-center sm:text-left">
-              Tu pronóstico: <span className="font-semibold text-slate-600">{choiceLabel[prediction.choice]}</span>
+              Tu pronóstico: <span className="font-semibold text-slate-600">{selectedLabel}</span>
               {prediction.points !== undefined && (
                 <span className={clsx(
                   'ml-2 font-bold',
@@ -120,6 +130,9 @@ export function MatchCard({
             onChange={(choice) => onPredict(match.id, choice)}
             disabled={disabled}
             size={compact ? 'sm' : 'md'}
+            mode={isQualifier ? 'qualifier' : 'group'}
+            homeLabel={match.homeTeam}
+            awayLabel={match.awayTeam}
           />
         </div>
       )}

@@ -8,9 +8,11 @@ interface StatusBadgeProps {
 }
 
 const matchStatusConfig: Record<MatchStatus, { label: string; className: string }> = {
-  SCHEDULED: { label: 'Programado', className: 'bg-slate-100 text-slate-600 border border-slate-200' },
-  LIVE: { label: 'En juego', className: 'bg-amber-100 text-amber-800 border border-amber-200 animate-pulse' },
+  OPEN: { label: 'Abierto', className: 'bg-emerald-100 text-emerald-700 border border-emerald-200' },
+  LOCKED: { label: 'Cerrado', className: 'bg-amber-100 text-amber-800 border border-amber-200' },
   FINISHED: { label: 'Finalizado', className: 'bg-blue-100 text-blue-800 border border-blue-200' },
+  SCHEDULED: { label: 'Abierto', className: 'bg-emerald-100 text-emerald-700 border border-emerald-200' },
+  LIVE: { label: 'Cerrado', className: 'bg-amber-100 text-amber-800 border border-amber-200' },
 };
 
 const predictionConfig: Record<string, { label: string; className: string }> = {

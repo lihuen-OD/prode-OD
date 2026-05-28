@@ -1,40 +1,66 @@
 import { prisma } from '../config/prisma.js';
 import type { PrismaClient, Prisma } from '@prisma/client';
+import { calculatePredictionPoints } from './matchRules.js';
 
 type PrismaLike = PrismaClient | Prisma.TransactionClient;
 
 async function loadRankingRows(tournamentId: string, client: PrismaLike) {
-  return client.$queryRaw<Array<{
-    userId: string;
-    fullName: string;
-    username: string;
-    points: number;
-    correctCount: number;
-    predictedCount: number;
-  }>>`
-    WITH stats AS (
-      SELECT
-        p."userId",
-        COALESCE(SUM(p."points"), 0)::int AS points,
-        COALESCE(SUM(CASE WHEN p."isCorrect" = true THEN 1 ELSE 0 END), 0)::int AS "correctCount",
-        COUNT(p."id")::int AS "predictedCount"
-      FROM "Prediction" p
-      INNER JOIN "Match" m ON m."id" = p."matchId"
-      WHERE m."tournamentId" = ${tournamentId}
-      GROUP BY p."userId"
-    )
-    SELECT
-      u."id" AS "userId",
-      u."fullName",
-      u."username",
-      COALESCE(stats.points, 0)::int AS points,
-      COALESCE(stats."correctCount", 0)::int AS "correctCount",
-      COALESCE(stats."predictedCount", 0)::int AS "predictedCount"
-    FROM "User" u
-    LEFT JOIN stats ON stats."userId" = u."id"
-    WHERE u."role" = 'USER' AND u."isActive" = true
-    ORDER BY points DESC, "correctCount" DESC, "predictedCount" DESC, u."fullName" ASC;
-  `;
+  const [users, matches, predictions] = await Promise.all([
+    client.user.findMany({
+      where: { role: 'USER', isActive: true },
+      select: { id: true, fullName: true, username: true },
+    }),
+    client.match.findMany({
+      where: { tournamentId },
+      select: {
+        id: true,
+        phase: true,
+        status: true,
+        homeScore: true,
+        awayScore: true,
+        homeTeamId: true,
+        awayTeamId: true,
+        winnerTeamId: true,
+      },
+    }),
+    client.prediction.findMany({
+      where: { match: { tournamentId } },
+      select: { userId: true, choice: true, matchId: true },
+    }),
+  ]);
+
+  const matchById = new Map(matches.map(match => [match.id, match]));
+  const statsByUser = new Map(users.map(user => [user.id, { userId: user.id, fullName: user.fullName, username: user.username, points: 0, correctCount: 0, predictedCount: 0 }]));
+
+  for (const prediction of predictions) {
+    const stats = statsByUser.get(prediction.userId);
+    if (!stats) {
+      continue;
+    }
+
+    stats.predictedCount += 1;
+
+    const match = matchById.get(prediction.matchId);
+    if (!match || match.status !== 'FINISHED') {
+      continue;
+    }
+
+    const points = calculatePredictionPoints(prediction, match);
+    stats.points += points;
+    if (points > 0) {
+      stats.correctCount += 1;
+    }
+  }
+
+  return [...statsByUser.values()].sort((a, b) => {
+    const pointsDiff = b.points - a.points;
+    if (pointsDiff !== 0) return pointsDiff;
+    const correctDiff = b.correctCount - a.correctCount;
+    if (correctDiff !== 0) return correctDiff;
+    const predictedDiff = b.predictedCount - a.predictedCount;
+    if (predictedDiff !== 0) return predictedDiff;
+    return a.fullName.localeCompare(b.fullName, 'es');
+  });
 }
 
 async function persistRankingSnapshots(

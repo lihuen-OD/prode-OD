@@ -6,6 +6,9 @@ interface PredictionSelectorProps {
   onChange?: (choice: PredictionChoice) => void;
   disabled?: boolean;
   size?: 'sm' | 'md';
+  mode?: 'group' | 'qualifier';
+  homeLabel?: string;
+  awayLabel?: string;
 }
 
 const selectedClass: Record<PredictionChoice, string> = {
@@ -19,22 +22,32 @@ export function PredictionSelector({
   onChange,
   disabled = false,
   size = 'md',
+  mode = 'group',
+  homeLabel = 'Gana local',
+  awayLabel = 'Gana visitante',
 }: PredictionSelectorProps) {
-  const options: Array<{ choice: PredictionChoice; label: string; shortLabel: string }> = [
-    { choice: 'HOME', label: 'Gana local', shortLabel: 'Gana local' },
-    { choice: 'DRAW', label: 'Empate', shortLabel: 'Empate' },
-    { choice: 'AWAY', label: 'Gana visitante', shortLabel: 'Gana visitante' },
-  ];
+  const options: Array<{ choice: PredictionChoice; label: string; shortLabel: string }> = mode === 'qualifier'
+    ? [
+        { choice: 'HOME', label: homeLabel, shortLabel: homeLabel },
+        { choice: 'AWAY', label: awayLabel, shortLabel: awayLabel },
+      ]
+    : [
+        { choice: 'HOME', label: 'Gana local', shortLabel: 'Gana local' },
+        { choice: 'DRAW', label: 'Empate', shortLabel: 'Empate' },
+        { choice: 'AWAY', label: 'Gana visitante', shortLabel: 'Gana visitante' },
+      ];
 
   return (
-    <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+    <div className={clsx('gap-1.5 sm:gap-2', mode === 'qualifier' ? 'grid grid-cols-2' : 'grid grid-cols-3')}>
       {options.map(({ choice, label, shortLabel }) => {
         const isSelected = value === choice;
-        const twoLineLabel = choice === 'HOME'
-          ? { first: 'Gana', second: 'Local' }
-          : choice === 'AWAY'
-            ? { first: 'Gana', second: 'Visitante' }
-            : null;
+        const twoLineLabel = mode === 'qualifier'
+          ? null
+          : choice === 'HOME'
+            ? { first: 'Gana', second: 'Local' }
+            : choice === 'AWAY'
+              ? { first: 'Gana', second: 'Visitante' }
+              : null;
         return (
           <button
             key={choice}

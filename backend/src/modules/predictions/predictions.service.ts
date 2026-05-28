@@ -1,7 +1,8 @@
-import { TournamentStatus, PredictionChoice } from '@prisma/client';
+import { PredictionChoice } from '@prisma/client';
 import { prisma } from '../../config/prisma.js';
 import { AppError } from '../../utils/AppError.js';
 import { recalculateRankingSnapshotsWithClient } from '../../utils/ranking.js';
+import { canPredict, isQualifierPhase } from '../../utils/matchRules.js';
 
 export async function upsertBulkPredictions(userId: string, items: Array<{ matchId: string; choice: PredictionChoice }>) {
   const user = await prisma.user.findUnique({ where: { id: userId } });
@@ -20,25 +21,49 @@ export async function upsertBulkPredictions(userId: string, items: Array<{ match
     throw new AppError('No hay torneo configurado', 404);
   }
 
-  if (tournament.status !== TournamentStatus.OPEN || tournament.predictionsCloseAt <= new Date()) {
-    throw new AppError('El prode ya está cerrado', 403);
-  }
-
   const uniqueMatchIds = [...new Set(items.map(item => item.matchId))];
   const matches = await prisma.match.findMany({
     where: {
       id: { in: uniqueMatchIds },
       tournamentId: tournament.id,
     },
-    select: { id: true, status: true, matchDate: true },
+    select: {
+      id: true,
+      phase: true,
+      predictionType: true,
+      status: true,
+      startTime: true,
+      predictionDeadline: true,
+      homePlaceholder: true,
+      awayPlaceholder: true,
+    },
   });
 
   if (matches.length !== uniqueMatchIds.length) {
     throw new AppError('Uno o más partidos no existen', 404);
   }
 
-  if (matches.some(match => match.status === 'FINISHED')) {
-    throw new AppError('No podés modificar partidos ya finalizados', 403);
+  const matchById = new Map(matches.map(match => [match.id, match]));
+
+  for (const item of items) {
+    const match = matchById.get(item.matchId);
+    if (!match) {
+      throw new AppError('Uno o más partidos no existen', 404);
+    }
+
+    if (!canPredict(match, new Date())) {
+      throw new AppError('La predicción ya está cerrada para este partido', 403);
+    }
+
+    if (match.predictionType === 'RESULT_1X2') {
+      if (!['HOME', 'DRAW', 'AWAY'].includes(item.choice)) {
+        throw new AppError('Este partido solo acepta pronóstico 1X2', 400);
+      }
+    } else if (isQualifierPhase(match.phase)) {
+      if (!['HOME', 'AWAY'].includes(item.choice)) {
+        throw new AppError('En eliminatorias solo podés elegir el clasificado', 400);
+      }
+    }
   }
 
   const upserts = await prisma.$transaction(async transaction => {

@@ -24,9 +24,24 @@ enum TournamentStatus {
 }
 
 enum MatchStatus {
-  SCHEDULED
-  LIVE
+  OPEN
+  LOCKED
   FINISHED
+}
+
+enum MatchPhase {
+  GROUP
+  ROUND_OF_32
+  ROUND_OF_16
+  QUARTER_FINAL
+  SEMI_FINAL
+  THIRD_PLACE
+  FINAL
+}
+
+enum PredictionType {
+  RESULT_1X2
+  QUALIFIER
 }
 
 enum PredictionChoice {
@@ -78,28 +93,40 @@ model Team {
   updatedAt DateTime @updatedAt
   homeMatches Match[] @relation("HomeTeam")
   awayMatches Match[] @relation("AwayTeam")
+  winnerMatches Match[] @relation("WinnerTeam")
 }
 
 model Match {
   id          String      @id @default(cuid())
   tournamentId String
-  groupName   String
+  groupName   String?
+  phase       MatchPhase  @default(GROUP)
+  predictionType PredictionType @default(RESULT_1X2)
   homeTeamId   String
   awayTeamId   String
-  matchDate    DateTime
+  startTime    DateTime    @map("matchDate")
+  predictionDeadline DateTime
+  homeScore    Int?
+  awayScore    Int?
+  winnerTeamId String?
+  homePlaceholder String?
+  awayPlaceholder String?
   venue       String?
-  status      MatchStatus @default(SCHEDULED)
+  status      MatchStatus @default(OPEN)
   result      PredictionChoice?
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   tournament  Tournament  @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   homeTeam    Team        @relation("HomeTeam", fields: [homeTeamId], references: [id])
   awayTeam    Team        @relation("AwayTeam", fields: [awayTeamId], references: [id])
+  winnerTeam  Team?       @relation("WinnerTeam", fields: [winnerTeamId], references: [id])
   predictions Prediction[]
 
   @@index([tournamentId])
   @@index([status])
-  @@index([matchDate])
+  @@index([startTime])
+  @@index([predictionDeadline])
+  @@index([phase])
   @@index([groupName])
 }
 

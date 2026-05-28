@@ -7,11 +7,12 @@ import { FlagIcon } from '../../components/ui/FlagIcon';
 import { matchesService } from '../../services/matchesService';
 import { showErrorToast, showSuccessToast } from '../../utils/errorHandler';
 import { formatTournamentDateLabel } from '../../utils/timezone';
-import type { Match, MatchStatus } from '../../types';
+import type { Match, MatchPhase, MatchStatus } from '../../types';
 
 // ─── Match Form Modal ─────────────────────────────────────────────────────────
 
 interface MatchFormData {
+  phase: MatchPhase;
   group: string;
   homeTeam: string;
   awayTeam: string;
@@ -40,6 +41,7 @@ interface DeleteModalProps {
 
 function MatchModal({ match, onClose, onSave }: MatchModalProps) {
   const [form, setForm] = useState<MatchFormData>({
+    phase: match?.phase ?? 'GROUP',
     group: match?.group ?? 'A',
     homeTeam: match?.homeTeam ?? '',
     awayTeam: match?.awayTeam ?? '',
@@ -47,7 +49,7 @@ function MatchModal({ match, onClose, onSave }: MatchModalProps) {
     awayFlag: match?.awayFlag ?? '🏳️',
     date: match?.date ?? '',
     time: match?.time ?? '15:00',
-    status: match?.status ?? 'SCHEDULED',
+    status: match?.status ?? 'OPEN',
     venue: match?.venue ?? '',
   });
 
@@ -91,6 +93,18 @@ function MatchModal({ match, onClose, onSave }: MatchModalProps) {
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
+              <label className="block text-xs font-semibold text-slate-600 mb-1">Fase *</label>
+              <select {...field('phase')} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                <option value="GROUP">Fase de grupos</option>
+                <option value="ROUND_OF_32">32avos de final</option>
+                <option value="ROUND_OF_16">Octavos de final</option>
+                <option value="QUARTER_FINAL">Cuartos de final</option>
+                <option value="SEMI_FINAL">Semifinales</option>
+                <option value="THIRD_PLACE">Tercer puesto</option>
+                <option value="FINAL">Final</option>
+              </select>
+            </div>
+            <div>
               <label className="block text-xs font-semibold text-slate-600 mb-1">Grupo *</label>
               <select {...field('group')} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
                 {['A','B','C','D','E','F','G','H','I','J','K','L'].map(g => <option key={g}>{g}</option>)}
@@ -99,8 +113,8 @@ function MatchModal({ match, onClose, onSave }: MatchModalProps) {
             <div>
               <label className="block text-xs font-semibold text-slate-600 mb-1">Estado</label>
               <select {...field('status')} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-                <option value="SCHEDULED">Programado</option>
-                <option value="LIVE">En juego</option>
+                <option value="OPEN">Abierto</option>
+                <option value="LOCKED">Cerrado</option>
                 <option value="FINISHED">Finalizado</option>
               </select>
             </div>

@@ -25,9 +25,11 @@ function saveMatches(matches: Match[]): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(matches));
 }
 
-function buildMatchPayload(data: Omit<Match, 'id'>) {
+function buildMatchPayload(data: any) {
   return {
     tournamentId: 'current',
+    phase: data.phase ?? 'GROUP',
+    predictionType: data.predictionType ?? ((data.phase ?? 'GROUP') === 'GROUP' ? 'RESULT_1X2' : 'QUALIFIER'),
     groupName: data.group,
     homeTeam: {
       name: data.homeTeam,
@@ -39,7 +41,10 @@ function buildMatchPayload(data: Omit<Match, 'id'>) {
       shortName: data.awayTeam.slice(0, 3).toUpperCase(),
       flagUrl: data.awayFlag,
     },
+    startTime: data.startTime ?? buildTournamentDateTimeIso(data.date, data.time),
     matchDate: buildTournamentDateTimeIso(data.date, data.time),
+    homePlaceholder: data.homePlaceholder ?? null,
+    awayPlaceholder: data.awayPlaceholder ?? null,
     status: data.status,
     venue: data.venue ?? null,
   };
@@ -83,7 +88,7 @@ export const matchesService = {
 
   async getGroups(): Promise<string[]> {
     const matches = await matchesService.getAll();
-    return [...new Set(matches.map(match => match.group))].sort();
+    return [...new Set(matches.map(match => match.group).filter((group): group is string => Boolean(group)))].sort();
   },
 
   async getFinished(): Promise<Match[]> {
@@ -93,10 +98,10 @@ export const matchesService = {
 
   async getScheduled(): Promise<Match[]> {
     const matches = await matchesService.getAll();
-    return matches.filter(match => match.status === 'SCHEDULED');
+    return matches.filter(match => match.status === 'OPEN');
   },
 
-  async create(data: Omit<Match, 'id'>): Promise<Match> {
+  async create(data: any): Promise<Match> {
     if (USE_MOCKS) {
       const matches = loadMatches();
       const newMatch: Match = { ...data, id: `match-${Date.now()}` };
@@ -115,7 +120,7 @@ export const matchesService = {
     return mapMatch(response.match);
   },
 
-  async update(id: string, data: Partial<Match>): Promise<Match | null> {
+  async update(id: string, data: any): Promise<Match | null> {
     if (USE_MOCKS) {
       const matches = loadMatches();
       const idx = matches.findIndex(match => match.id === id);
@@ -180,8 +185,8 @@ export const matchesService = {
       const matches = loadMatches();
       return {
         total: matches.length,
-        scheduled: matches.filter(match => match.status === 'SCHEDULED').length,
-        live: matches.filter(match => match.status === 'LIVE').length,
+        scheduled: matches.filter(match => match.status === 'OPEN').length,
+        live: matches.filter(match => match.status === 'LOCKED').length,
         finished: matches.filter(match => match.status === 'FINISHED').length,
       };
     }

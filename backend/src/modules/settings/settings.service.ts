@@ -10,8 +10,24 @@ export async function getPublicSettings() {
     orderBy: { createdAt: 'desc' },
     select: {
       name: true,
-      status: true,
-      predictionsCloseAt: true,
+    },
+  });
+
+  const nextClosingMatch = await prisma.match.findFirst({
+    where: {
+      status: 'OPEN',
+      predictionDeadline: { gt: new Date() },
+    },
+    orderBy: { predictionDeadline: 'asc' },
+    select: {
+      id: true,
+      phase: true,
+      predictionDeadline: true,
+      startTime: true,
+      homePlaceholder: true,
+      awayPlaceholder: true,
+      homeTeam: { select: { name: true } },
+      awayTeam: { select: { name: true } },
     },
   });
 
@@ -27,8 +43,16 @@ export async function getPublicSettings() {
   return {
     clubName: CLUB_NAME,
     tournamentName: tournament.name,
-    status: tournament.status,
-    predictionsCloseAt: tournament.predictionsCloseAt,
+    status: nextClosingMatch ? 'OPEN' : 'CLOSED',
+    predictionsCloseAt: nextClosingMatch?.predictionDeadline ?? null,
+    nextClosingMatch: nextClosingMatch ? {
+      id: nextClosingMatch.id,
+      phase: nextClosingMatch.phase,
+      predictionDeadline: nextClosingMatch.predictionDeadline,
+      startTime: nextClosingMatch.startTime,
+      homeTeamName: nextClosingMatch.homePlaceholder ?? nextClosingMatch.homeTeam.name,
+      awayTeamName: nextClosingMatch.awayPlaceholder ?? nextClosingMatch.awayTeam.name,
+    } : null,
     resultsSource: appSetting?.resultsSource ?? 'MANUAL',
   };
 }

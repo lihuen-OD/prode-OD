@@ -57,18 +57,19 @@ export const settingsService = {
 
   async isProdeOpen(): Promise<boolean> {
     const settings = await settingsService.get();
-    if (settings.status && settings.status !== 'OPEN') {
+    if (!settings.nextClosingMatch) {
       return false;
     }
-    return new Date() < new Date(settings.prodeClosesAt);
+
+    return new Date() < new Date(settings.nextClosingMatch.predictionDeadline);
   },
 
   async getCountdown(): Promise<{ days: number; hours: number; minutes: number }> {
     const settings = await settingsService.get();
-    if (settings.status && settings.status !== 'OPEN') {
+    if (!settings.nextClosingMatch) {
       return { days: 0, hours: 0, minutes: 0 };
     }
-    const diff = new Date(settings.prodeClosesAt).getTime() - Date.now();
+    const diff = new Date(settings.nextClosingMatch.predictionDeadline).getTime() - Date.now();
     if (diff <= 0) return { days: 0, hours: 0, minutes: 0 };
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));

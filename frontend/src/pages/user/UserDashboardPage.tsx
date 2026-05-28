@@ -43,7 +43,7 @@ function getCountdown(closeAt: string) {
 
 export function UserDashboardPage() {
   const { user } = useAuth();
-  const { isOpen, countdown } = useProdeStatus();
+  const { isOpen, countdown, nextClosingMatch } = useProdeStatus();
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
 
   useEffect(() => {
@@ -67,7 +67,7 @@ export function UserDashboardPage() {
     totalCorrect: dashboard.summary.correctCount,
     totalPredicted: dashboard.summary.predictedCount,
   };
-  const countdownData = dashboard.tournament.predictionsCloseAt ? getCountdown(dashboard.tournament.predictionsCloseAt) : countdown;
+  const countdownData = nextClosingMatch ? getCountdown(nextClosingMatch.predictionDeadline) : countdown;
 
   return (
     <AppLayout variant="user">
@@ -88,7 +88,8 @@ export function UserDashboardPage() {
           <div>
             <p className="text-sm font-semibold text-blue-800">El prode está abierto</p>
             <p className="text-xs text-blue-600">
-              Cierra en: <strong>{countdownData.days}d {countdownData.hours}h {countdownData.minutes}m</strong> · Aprovechá para completar tus pronósticos.
+              Próximo cierre: <strong>{nextClosingMatch ? `${nextClosingMatch.homeTeamName} vs ${nextClosingMatch.awayTeamName}` : 'sin partidos abiertos'}</strong>
+              {' '}· {countdownData.days}d {countdownData.hours}h {countdownData.minutes}m.
             </p>
           </div>
           <Link
@@ -139,7 +140,7 @@ export function UserDashboardPage() {
           <Calendar className="w-8 h-8 text-blue-200 mb-3" />
           <h3 className="font-bold text-lg mb-1">Mis pronósticos</h3>
           <p className="text-blue-200 text-sm">
-            {isOpen ? 'Completá o editá tus pronósticos de la fase de grupos.' : 'Ver tus pronósticos y resultados.'}
+            {isOpen ? 'Completá o editá tus pronósticos del Mundial.' : 'Ver tus pronósticos y resultados.'}
           </p>
           <span className="mt-4 inline-block text-sm font-semibold text-blue-200 group-hover:text-white transition-colors">
             Ir a pronósticos →

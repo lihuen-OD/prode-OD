@@ -6,7 +6,7 @@ import { SponsorCarousel } from '../../components/ui/SponsorCarousel';
 import { useProdeStatus } from '../../hooks/useProdeStatus';
 
 export function LandingPage() {
-  const { isOpen, countdown } = useProdeStatus();
+  const { isOpen, countdown, nextClosingMatch } = useProdeStatus();
 
   return (
     <PublicLayout>
@@ -40,8 +40,9 @@ export function LandingPage() {
             <div className="flex items-center justify-center gap-2 mb-8 animate-fade-in delay-300">
               <Clock className="w-4 h-4 text-amber-400" />
               <p className="text-white/90 text-sm">
-                Cierre de pronósticos en:{' '}
+                Próximo cierre de predicciones:{' '}
                 <span className="text-white font-bold">
+                  {nextClosingMatch ? `${nextClosingMatch.homeTeamName} vs ${nextClosingMatch.awayTeamName} · ` : ''}
                   {countdown.days}d {countdown.hours}h {countdown.minutes}m
                 </span>
               </p>
@@ -93,7 +94,7 @@ export function LandingPage() {
                 number: '01',
                 icon: <Target className="w-7 h-7" />,
                 title: 'Pronosticá',
-                description: 'Elegí si gana local, empata o gana visitante en cada partido.',
+                description: 'Elegí si gana local, empata, gana visitante o quién clasifica según la fase.',
                 color: 'from-blue-600 to-blue-500',
               },
               {
@@ -140,7 +141,7 @@ export function LandingPage() {
             <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-6 text-center card-hover">
               <div className="text-5xl font-black text-emerald-600 font-display mb-2">3</div>
               <p className="text-base font-bold text-emerald-800">puntos</p>
-              <p className="text-sm text-emerald-700 mt-2">Acertás el resultado:<br />gana local, empate o visitante</p>
+              <p className="text-sm text-emerald-700 mt-2">Acertás el resultado o el clasificado según la fase</p>
             </div>
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-center card-hover">
               <div className="text-5xl font-black text-slate-400 font-display mb-2">0</div>
@@ -150,7 +151,7 @@ export function LandingPage() {
           </div>
 
           <p className="text-center text-sm text-slate-400 mt-6">
-            Solo elegís entre: <strong className="text-slate-600">Gana local · Empate · Gana visitante</strong>
+            {nextClosingMatch ? 'Ahora también hay eliminatorias: elegí el clasificado o el resultado según la fase.' : 'Elegí el resultado según la fase del partido.'}
           </p>
         </div>
       </section>

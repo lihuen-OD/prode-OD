@@ -1,4 +1,4 @@
-import type { User, Match, Prediction, RankingEntry, AppSettings } from '../types';
+import type { User, Prediction, RankingEntry, AppSettings } from '../types';
 
 // ─── App Settings Mock ────────────────────────────────────────────────────────
 
@@ -107,7 +107,7 @@ export const mockUsers: User[] = [
 
 // ─── Matches Mock ─────────────────────────────────────────────────────────────
 
-export const mockMatches: Match[] = [
+export const mockMatches: any[] = [
   // Group A
   { id: 'match-1', group: 'A', homeTeam: 'México', awayTeam: 'Canadá', homeFlag: '🇲🇽', awayFlag: '🇨🇦', date: '2026-06-11', time: '15:00', status: 'FINISHED', result: 'HOME', venue: 'SoFi Stadium' },
   { id: 'match-2', group: 'A', homeTeam: 'Estados Unidos', awayTeam: 'Arabia Saudita', homeFlag: '🇺🇸', awayFlag: '🇸🇦', date: '2026-06-11', time: '18:00', status: 'FINISHED', result: 'HOME', venue: 'MetLife Stadium' },

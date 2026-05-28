@@ -2,8 +2,8 @@ import type { Request, Response } from 'express';
 import { createAdminMatch, deleteAdminMatch, getLastResults, getMatchStats, listAdminMatches, setMatchResult, updateAdminMatch } from './matches.service.js';
 
 export async function listMatchesController(req: Request, res: Response) {
-  const { group, status } = req.query as { group?: string; status?: 'SCHEDULED' | 'LIVE' | 'FINISHED' };
-  const data = await listAdminMatches({ group, status });
+  const { group, phase, status } = req.query as { group?: string; phase?: 'GROUP' | 'ROUND_OF_32' | 'ROUND_OF_16' | 'QUARTER_FINAL' | 'SEMI_FINAL' | 'THIRD_PLACE' | 'FINAL'; status?: 'OPEN' | 'LOCKED' | 'FINISHED' };
+  const data = await listAdminMatches({ group, phase, status });
   res.json(data);
 }
 
@@ -18,7 +18,7 @@ export async function updateMatchController(req: Request, res: Response) {
 }
 
 export async function setResultController(req: Request, res: Response) {
-  const match = await setMatchResult(req.params.id as string, req.body.result);
+  const match = await setMatchResult(req.params.id as string, req.body);
   res.json({ match });
 }
 
