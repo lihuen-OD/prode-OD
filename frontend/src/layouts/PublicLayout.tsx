@@ -11,7 +11,7 @@ export function PublicLayout({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="min-h-screen flex flex-col app-shell">
       <header className="sticky top-0 z-30 glass border-b border-white/20 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
           <Link to="/" className="flex items-center gap-2.5 min-w-0 flex-shrink-0">

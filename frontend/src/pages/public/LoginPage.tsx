@@ -56,9 +56,9 @@ export function LoginPage() {
       <div className="min-h-[calc(100vh-140px)] flex items-center justify-center px-4 py-8 sm:py-12">
         <div className="w-full max-w-md max-w-full animate-fade-in-up space-y-4 sm:space-y-5">
           {/* Card */}
-          <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden max-w-full">
+          <div className="surface-card-strong overflow-hidden max-w-full">
             {/* Header */}
-            <div className="bg-gradient-to-r from-blue-900 to-blue-700 px-5 sm:px-8 py-7 sm:py-8 text-center">
+            <div className="hero-panel relative px-5 sm:px-8 py-7 sm:py-8 text-center overflow-hidden">
               <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-md overflow-hidden p-1.5">
                 <img
                   src="/assets/logos/favicon.png"
@@ -69,7 +69,7 @@ export function LoginPage() {
               <h1 className="text-white text-xl sm:text-2xl font-black font-display break-words">
                 Iniciar sesión
               </h1>
-              <p className="text-blue-200 text-sm mt-1">
+              <p className="text-white/80 text-sm mt-1">
                 LOS O'DWYER · Prode 2026
               </p>
             </div>
@@ -79,7 +79,7 @@ export function LoginPage() {
               <form onSubmit={handleSubmit} className="space-y-4 mb-6">
                 <div>
                   <label
-                    className="block text-sm font-semibold text-slate-700 mb-1.5"
+                    className="block label-base text-sm mb-1.5"
                     htmlFor="login-username"
                   >
                     Usuario
@@ -91,12 +91,12 @@ export function LoginPage() {
                     onChange={(e) => setUsername(e.target.value)}
                     placeholder="tu.usuario"
                     autoComplete="username"
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    className="w-full input-base px-4 py-2.5 text-sm transition"
                   />
                 </div>
                 <div>
                   <label
-                    className="block text-sm font-semibold text-slate-700 mb-1.5"
+                    className="block label-base text-sm mb-1.5"
                     htmlFor="login-password"
                   >
                     Contraseña
@@ -109,7 +109,7 @@ export function LoginPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
                       autoComplete="current-password"
-                      className="w-full px-4 py-2.5 pr-10 rounded-xl border border-slate-200 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                      className="w-full input-base px-4 py-2.5 pr-10 text-sm transition"
                     />
                     <button
                       type="button"
@@ -126,7 +126,7 @@ export function LoginPage() {
                 </div>
 
                 {error && (
-                  <div className="flex items-center gap-2 bg-red-50 text-red-700 text-sm px-4 py-3 rounded-xl border border-red-100">
+                  <div className="flex items-center gap-2 bg-slate-50 text-slate-700 text-sm px-4 py-3 rounded-xl border border-slate-200">
                     <AlertCircle className="w-4 h-4 flex-shrink-0" />
                     {error}
                   </div>
@@ -135,7 +135,7 @@ export function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading || !username || !password}
-                  className="w-full flex items-center justify-center gap-2 bg-blue-700 hover:bg-blue-800 disabled:bg-slate-200 disabled:text-slate-400 text-white font-bold py-2.5 rounded-xl transition-colors shadow-sm"
+                  className="w-full flex items-center justify-center gap-2 btn-primary disabled:bg-slate-200 disabled:text-slate-400 text-white font-bold py-3 transition-colors shadow-sm"
                 >
                   {loading ? (
                     <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />

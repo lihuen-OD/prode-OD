@@ -50,9 +50,9 @@ export function AppLayout({ children, variant }: AppLayoutProps) {
   const SidebarContent = () => (
     <>
       {/* Logo */}
-      <div className="px-6 py-5 border-b border-blue-700/30">
+      <div className="px-6 py-5 border-b border-white/10">
         <Link to="/" className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-white rounded-xl flex items-center justify-center shadow-sm overflow-hidden border border-blue-200 p-1">
+          <div className="w-9 h-9 bg-white rounded-xl flex items-center justify-center shadow-sm overflow-hidden border border-white/30 p-1">
             <img
               src="/assets/logos/favicon.png"
               alt="Escudo LOS O'DWYER"
@@ -66,16 +66,16 @@ export function AppLayout({ children, variant }: AppLayoutProps) {
       </div>
 
       {/* User info */}
-      <div className="px-5 py-4 border-b border-blue-700/30">
+      <div className="px-5 py-4 border-b border-white/10">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+          <div className="w-9 h-9 bg-[rgba(230,230,230,0.18)] rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0 border border-white/20">
             {user?.fullName.charAt(0).toUpperCase()}
           </div>
           <div className="min-w-0">
             <p className="text-white text-sm font-semibold truncate">{user?.fullName}</p>
             <div className="flex items-center gap-1 mt-0.5">
-              {isAdmin && <Shield className="w-3 h-3 text-amber-400" />}
-              <p className="text-blue-300 text-xs">{isAdmin ? 'Administrador' : 'Participante'}</p>
+              {isAdmin && <Shield className="w-3 h-3 text-slate-200" />}
+              <p className="text-slate-200 text-xs">{isAdmin ? 'Administrador' : 'Participante'}</p>
             </div>
           </div>
         </div>
@@ -94,7 +94,7 @@ export function AppLayout({ children, variant }: AppLayoutProps) {
                 'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all',
                 isActive
                   ? 'sidebar-item-active'
-                  : 'text-blue-100 hover:bg-blue-700/40 hover:text-white'
+                  : 'text-slate-200 hover:bg-white/8 hover:text-white'
               )}
             >
               {item.icon}
@@ -106,10 +106,10 @@ export function AppLayout({ children, variant }: AppLayoutProps) {
       </nav>
 
       {/* Logout */}
-      <div className="px-3 py-4 border-t border-blue-700/30">
+      <div className="px-3 py-4 border-t border-white/10">
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-blue-200 hover:bg-red-500/20 hover:text-red-300 transition-all"
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-200 hover:bg-white/10 hover:text-white transition-all"
         >
           <LogOut className="w-4 h-4" />
           Cerrar sesión
@@ -119,7 +119,7 @@ export function AppLayout({ children, variant }: AppLayoutProps) {
   );
 
   return (
-    <div className="min-h-screen flex bg-slate-50">
+    <div className="min-h-screen flex app-shell">
       {/* Desktop sidebar */}
       <aside className="hidden lg:flex lg:flex-col w-64 bg-gradient-to-b from-blue-900 to-blue-800 fixed inset-y-0 left-0 z-30 shadow-xl">
         <SidebarContent />

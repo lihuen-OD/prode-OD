@@ -48,20 +48,20 @@ export default function App() {
           toastOptions={{
             duration: 3000,
             style: {
-              borderRadius: '14px',
+              borderRadius: '16px',
               fontFamily: 'Inter, sans-serif',
-              fontSize: '13px',
+              fontSize: '14px',
               fontWeight: 600,
               background: 'rgba(255,255,255,0.98)',
-              color: '#101a2a',
-              border: '1px solid rgba(217, 225, 236, 0.85)',
-              boxShadow: '0 12px 30px rgba(11, 35, 95, 0.12)',
+              color: '#3B5936',
+              border: '1px solid rgba(59, 89, 54, 0.18)',
+              boxShadow: '0 14px 32px rgba(20, 110, 68, 0.14)',
             },
             success: {
-              iconTheme: { primary: '#15935a', secondary: '#fff' },
+              iconTheme: { primary: '#146E44', secondary: '#fff' },
             },
             error: {
-              iconTheme: { primary: '#c92d4d', secondary: '#fff' },
+              iconTheme: { primary: '#3B5936', secondary: '#fff' },
             },
           }}
         />
