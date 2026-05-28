@@ -17,7 +17,7 @@ export function PublicLayout({ children }: { children: ReactNode }) {
           <Link to="/" className="flex items-center gap-2.5 min-w-0 flex-shrink-0">
             <div className="w-9 h-9 bg-white rounded-xl flex items-center justify-center shadow-sm overflow-hidden border border-slate-200 p-1">
               <img
-                src="/assets/logos/favicon.png"
+                src="/assets/logos/logo%201.jpg.jpeg"
                 alt="Escudo LOS O'DWYER"
                 className="w-full h-full object-contain"
               />

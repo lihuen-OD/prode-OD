@@ -54,7 +54,7 @@ export function AppLayout({ children, variant }: AppLayoutProps) {
         <Link to="/" className="flex items-center gap-3">
           <div className="w-9 h-9 bg-white rounded-xl flex items-center justify-center shadow-sm overflow-hidden border border-white/30 p-1">
             <img
-              src="/assets/logos/favicon.png"
+              src="/assets/logos/logo%201.jpg.jpeg"
               alt="Escudo LOS O'DWYER"
               className="w-full h-full object-contain"
             />
@@ -149,7 +149,7 @@ export function AppLayout({ children, variant }: AppLayoutProps) {
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 bg-white rounded-lg flex items-center justify-center overflow-hidden border border-blue-200 p-1">
               <img
-                src="/assets/logos/favicon.png"
+                  src="/assets/logos/logo%201.jpg.jpeg"
                 alt="Escudo LOS O'DWYER"
                 className="w-full h-full object-contain"
               />

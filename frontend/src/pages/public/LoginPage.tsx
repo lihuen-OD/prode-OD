@@ -61,7 +61,7 @@ export function LoginPage() {
             <div className="hero-panel relative px-5 sm:px-8 py-7 sm:py-8 text-center overflow-hidden">
               <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-md overflow-hidden p-1.5">
                 <img
-                  src="/assets/logos/favicon.png"
+                  src="/assets/logos/logo%201.jpg.jpeg"
                   alt="Escudo LOS O'DWYER"
                   className="w-full h-full object-contain"
                 />
