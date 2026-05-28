@@ -1,0 +1,162 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  USER
+}
+
+enum PaymentStatus {
+  PAID
+  PENDING
+}
+
+enum TournamentStatus {
+  OPEN
+  CLOSED
+  FINISHED
+}
+
+enum MatchStatus {
+  SCHEDULED
+  LIVE
+  FINISHED
+}
+
+enum PredictionChoice {
+  HOME
+  DRAW
+  AWAY
+}
+
+enum ResultsSource {
+  MANUAL
+  API
+}
+
+model User {
+  id             String      @id @default(cuid())
+  fullName       String
+  username       String      @unique
+  passwordHash   String
+  phone          String?
+  email          String?
+  role           UserRole    @default(USER)
+  paymentStatus   PaymentStatus @default(PENDING)
+  isActive       Boolean     @default(true)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  predictions    Prediction[]
+  rankingSnapshots RankingSnapshot[]
+
+  @@index([role])
+  @@index([paymentStatus])
+  @@index([isActive])
+}
+
+model Tournament {
+  id                 String            @id @default(cuid())
+  name               String
+  status             TournamentStatus  @default(OPEN)
+  predictionsCloseAt DateTime
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  matches            Match[]
+  rankingSnapshots   RankingSnapshot[]
+}
+
+model Team {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  shortName String?
+  flagUrl   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  homeMatches Match[] @relation("HomeTeam")
+  awayMatches Match[] @relation("AwayTeam")
+}
+
+model Match {
+  id          String      @id @default(cuid())
+  tournamentId String
+  groupName   String
+  homeTeamId   String
+  awayTeamId   String
+  matchDate    DateTime
+  venue       String?
+  status      MatchStatus @default(SCHEDULED)
+  result      PredictionChoice?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  tournament  Tournament  @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  homeTeam    Team        @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  awayTeam    Team        @relation("AwayTeam", fields: [awayTeamId], references: [id])
+  predictions Prediction[]
+
+  @@index([tournamentId])
+  @@index([status])
+  @@index([matchDate])
+  @@index([groupName])
+}
+
+model Prediction {
+  id         String            @id @default(cuid())
+  userId     String
+  matchId    String
+  choice     PredictionChoice
+  points     Int               @default(0)
+  isCorrect  Boolean?
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  match      Match             @relation(fields: [matchId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, matchId])
+  @@index([userId])
+  @@index([matchId])
+}
+
+model RankingSnapshot {
+  id            String    @id @default(cuid())
+  tournamentId  String
+  userId        String
+  points        Int
+  correctCount  Int
+  predictedCount Int
+  position      Int
+  updatedAt     DateTime  @updatedAt
+  tournament    Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tournamentId, userId])
+  @@index([tournamentId])
+  @@index([userId])
+  @@index([tournamentId, points(sort: Desc), correctCount(sort: Desc)])
+}
+
+model AppSetting {
+  id            String        @id @default(cuid())
+  resultsSource ResultsSource  @default(MANUAL)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  userId    String?  
+  entity    String?
+  entityId  String?
+  ip        String?
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([entity, entityId])
+}

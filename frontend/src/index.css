@@ -1,0 +1,348 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+/* Mobile / accessibility fixes to avoid unwanted zoom and horizontal scroll */
+html, body, #root {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%; /* prevent iOS from resizing text */
+}
+
+body {
+  margin: 0;
+  overflow-x: hidden;
+}
+
+img, video, canvas, svg {
+  max-width: 100%;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+/* iOS zoom fix: inputs with font-size < 16px trigger automatic zoom. Set sensible minimum */
+input, select, textarea, button {
+  font-size: 16px;
+  max-width: 100%;
+}
+
+/* Ensure interactive elements don't cause layout jumps on mobile */
+button, a, input, select, textarea {
+  touch-action: manipulation;
+}
+
+@theme {
+  --font-sans: 'Inter', sans-serif;
+  --font-display: 'Outfit', sans-serif;
+
+  /* Club palette: premium blue + cool neutrals */
+  --color-blue-50: #eef5ff;
+  --color-blue-100: #d8e7ff;
+  --color-blue-200: #b7d2ff;
+  --color-blue-300: #8eb6ff;
+  --color-blue-400: #5f8fff;
+  --color-blue-500: #306ef0;
+  --color-blue-600: #1e54dd;
+  --color-blue-700: #153fb8;
+  --color-blue-800: #12348d;
+  --color-blue-900: #0b235f;
+  --color-blue-950: #08163b;
+
+  --color-slate-50: #f6f8fc;
+  --color-slate-100: #ebf0f7;
+  --color-slate-200: #d9e1ec;
+  --color-slate-300: #bac6d7;
+  --color-slate-400: #8a98af;
+  --color-slate-500: #66758c;
+  --color-slate-600: #4b5a71;
+  --color-slate-700: #314056;
+  --color-slate-800: #1d2a3d;
+  --color-slate-900: #101a2a;
+  --color-slate-950: #070d16;
+
+  --color-emerald-50: #effaf4;
+  --color-emerald-100: #d9f5e5;
+  --color-emerald-200: #b8ebce;
+  --color-emerald-300: #82d8a9;
+  --color-emerald-400: #4ec783;
+  --color-emerald-500: #22b96c;
+  --color-emerald-600: #15935a;
+  --color-emerald-700: #0f7146;
+  --color-emerald-800: #0e5738;
+  --color-emerald-900: #0a3f29;
+
+  --color-amber-50: #fff9eb;
+  --color-amber-100: #ffefc6;
+  --color-amber-200: #ffe29b;
+  --color-amber-300: #ffd16a;
+  --color-amber-400: #f7b933;
+  --color-amber-500: #e69b10;
+  --color-amber-600: #c97a08;
+  --color-amber-700: #a85f09;
+  --color-amber-800: #874b0f;
+  --color-amber-900: #62370f;
+
+  --color-red-50: #fff1f2;
+  --color-red-100: #ffe2e5;
+  --color-red-200: #ffc6cf;
+  --color-red-300: #fca4b2;
+  --color-red-400: #f56f88;
+  --color-red-500: #e84c69;
+  --color-red-600: #c92d4d;
+  --color-red-700: #a61f3d;
+  --color-red-800: #861932;
+  --color-red-900: #651528;
+
+  --color-indigo-50: #eff2ff;
+  --color-indigo-100: #dfe7ff;
+  --color-indigo-200: #c5d4ff;
+  --color-indigo-300: #9cb8ff;
+  --color-indigo-400: #7493ff;
+  --color-indigo-500: #4c6df5;
+  --color-indigo-600: #3450de;
+  --color-indigo-700: #2337b6;
+  --color-indigo-800: #1d2f8d;
+  --color-indigo-900: #172466;
+
+  --color-purple-50: #f3f2ff;
+  --color-purple-100: #e6e3ff;
+  --color-purple-200: #cdc7ff;
+  --color-purple-300: #a9a0ff;
+  --color-purple-400: #8778ff;
+  --color-purple-500: #6658f1;
+  --color-purple-600: #5140d2;
+  --color-purple-700: #3e2eaa;
+  --color-purple-800: #33267f;
+  --color-purple-900: #261f58;
+
+  --color-orange-50: #fff7ed;
+  --color-orange-100: #ffedd4;
+  --color-orange-200: #ffd6a6;
+  --color-orange-300: #ffb86c;
+  --color-orange-400: #ff9a36;
+  --color-orange-500: #f47d14;
+  --color-orange-600: #cc620f;
+  --color-orange-700: #a04b10;
+  --color-orange-800: #7d3b13;
+  --color-orange-900: #5b2c11;
+
+  --color-cyan-50: #effcff;
+  --color-cyan-100: #d8f7ff;
+  --color-cyan-200: #b3eeff;
+  --color-cyan-300: #81deff;
+  --color-cyan-400: #50c7ff;
+  --color-cyan-500: #24a7f0;
+  --color-cyan-600: #1784cf;
+  --color-cyan-700: #10669e;
+  --color-cyan-800: #0d507b;
+  --color-cyan-900: #0a3b59;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #f6f8fc;
+  color: #101a2a;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: rgba(21, 63, 184, 0.18);
+  color: #0b235f;
+}
+
+:focus-visible {
+  outline: 2px solid #306ef0;
+  outline-offset: 2px;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #93c5fd;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #1d4ed8;
+}
+
+/* Custom animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(59, 130, 246, 0);
+  }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.4s ease-out forwards;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s infinite;
+}
+
+/* Delay utilities */
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+.delay-500 { animation-delay: 500ms; }
+
+/* Glass effect */
+.glass {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.42);
+}
+
+.glass-dark {
+  background: rgba(11, 35, 95, 0.72);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Hero gradient */
+.hero-gradient {
+  background: 
+    radial-gradient(circle at 20% 50%, rgba(48, 110, 240, 0.16) 0%, transparent 48%),
+    radial-gradient(circle at 80% 20%, rgba(20, 63, 184, 0.2) 0%, transparent 52%),
+    radial-gradient(circle at 60% 80%, rgba(11, 35, 95, 0.28) 0%, transparent 52%),
+    linear-gradient(135deg, #08163b 0%, #12348d 42%, #153fb8 72%, #306ef0 100%);
+}
+
+/* Card hover effects */
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(11, 35, 95, 0.12);
+}
+
+/* Prediction button styles */
+.prediction-btn {
+  transition: all 0.15s ease;
+  border: 2px solid transparent;
+}
+
+.prediction-btn:hover:not(:disabled) {
+  transform: scale(1.02);
+}
+
+.prediction-btn.selected-home {
+  background-color: #153fb8;
+  border-color: #153fb8;
+  color: white;
+  box-shadow: 0 4px 14px rgba(21, 63, 184, 0.28);
+}
+
+.prediction-btn.selected-draw {
+  background-color: #306ef0;
+  border-color: #306ef0;
+  color: white;
+  box-shadow: 0 4px 14px rgba(48, 110, 240, 0.26);
+}
+
+.prediction-btn.selected-away {
+  background-color: #0b235f;
+  border-color: #0b235f;
+  color: white;
+  box-shadow: 0 4px 14px rgba(11, 35, 95, 0.26);
+}
+
+/* Rank medal colors */
+.rank-gold {
+  background: linear-gradient(135deg, #ffd96b, #e6a311 55%, #c77f07);
+  color: white;
+}
+.rank-silver {
+  background: linear-gradient(135deg, #eef2f7, #c7d1dd 55%, #94a3b8);
+  color: white;
+}
+.rank-bronze {
+  background: linear-gradient(135deg, #d79a58, #b86c26 55%, #8a4412);
+  color: white;
+}
+.rank-default {
+  background: #dfe7f1;
+  color: #415068;
+}
+
+/* Sidebar active item */
+.sidebar-item-active {
+  background: linear-gradient(135deg, #153fb8, #306ef0);
+  color: white;
+  box-shadow: 0 4px 12px rgba(21, 63, 184, 0.24);
+}
+
+/* Status badge shimmer for loading */
+.skeleton {
+  background: linear-gradient(90deg, #eef5ff 25%, #dbe7ff 50%, #eef5ff 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 6px;
+}
