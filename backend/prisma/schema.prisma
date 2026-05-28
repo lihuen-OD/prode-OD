@@ -102,8 +102,8 @@ model Match {
   groupName   String?
   phase       MatchPhase  @default(GROUP)
   predictionType PredictionType @default(RESULT_1X2)
-  homeTeamId   String
-  awayTeamId   String
+  homeTeamId   String?
+  awayTeamId   String?
   startTime    DateTime    @map("matchDate")
   predictionDeadline DateTime
   homeScore    Int?
@@ -117,8 +117,8 @@ model Match {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   tournament  Tournament  @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
-  homeTeam    Team        @relation("HomeTeam", fields: [homeTeamId], references: [id])
-  awayTeam    Team        @relation("AwayTeam", fields: [awayTeamId], references: [id])
+  homeTeam    Team?       @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  awayTeam    Team?       @relation("AwayTeam", fields: [awayTeamId], references: [id])
   winnerTeam  Team?       @relation("WinnerTeam", fields: [winnerTeamId], references: [id])
   predictions Prediction[]
 

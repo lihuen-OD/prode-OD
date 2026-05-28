@@ -34,6 +34,8 @@ export async function upsertBulkPredictions(userId: string, items: Array<{ match
       status: true,
       startTime: true,
       predictionDeadline: true,
+      homeTeamId: true,
+      awayTeamId: true,
       homePlaceholder: true,
       awayPlaceholder: true,
     },

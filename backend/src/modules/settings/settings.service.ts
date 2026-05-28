@@ -17,6 +17,14 @@ export async function getPublicSettings() {
     where: {
       status: 'OPEN',
       predictionDeadline: { gt: new Date() },
+      OR: [
+        { phase: 'GROUP' },
+        {
+          phase: { not: 'GROUP' },
+          homeTeamId: { not: null },
+          awayTeamId: { not: null },
+        },
+      ],
     },
     orderBy: { predictionDeadline: 'asc' },
     select: {
@@ -50,8 +58,8 @@ export async function getPublicSettings() {
       phase: nextClosingMatch.phase,
       predictionDeadline: nextClosingMatch.predictionDeadline,
       startTime: nextClosingMatch.startTime,
-      homeTeamName: nextClosingMatch.homePlaceholder ?? nextClosingMatch.homeTeam.name,
-      awayTeamName: nextClosingMatch.awayPlaceholder ?? nextClosingMatch.awayTeam.name,
+      homeTeamName: nextClosingMatch.homeTeam?.name ?? nextClosingMatch.homePlaceholder ?? 'Local por definir',
+      awayTeamName: nextClosingMatch.awayTeam?.name ?? nextClosingMatch.awayPlaceholder ?? 'Visitante por definir',
     } : null,
     resultsSource: appSetting?.resultsSource ?? 'MANUAL',
   };

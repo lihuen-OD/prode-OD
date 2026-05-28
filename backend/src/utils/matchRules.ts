@@ -10,8 +10,8 @@ type MatchLike = {
   predictionDeadline: Date;
   homePlaceholder?: string | null;
   awayPlaceholder?: string | null;
-  homeTeamId?: string;
-  awayTeamId?: string;
+  homeTeamId?: string | null;
+  awayTeamId?: string | null;
   winnerTeamId?: string | null;
   homeScore?: number | null;
   awayScore?: number | null;
@@ -79,7 +79,7 @@ export function canPredict(
     return false;
   }
 
-  if (isQualifierPhase(match.phase) && (isPlaceholderLabel(match.homePlaceholder) || isPlaceholderLabel(match.awayPlaceholder))) {
+  if (isQualifierPhase(match.phase) && (!match.homeTeamId || !match.awayTeamId)) {
     return false;
   }
 
@@ -116,8 +116,12 @@ export function getQualifierWinnerSide(match: Pick<MatchLike, 'homeTeamId' | 'aw
 
 export function calculatePredictionPoints(
   prediction: Pick<{ choice: PredictionChoice }, 'choice'>,
-  match: Pick<MatchLike, 'phase' | 'homeScore' | 'awayScore' | 'homeTeamId' | 'awayTeamId' | 'winnerTeamId'>,
+  match: Pick<MatchLike, 'phase' | 'status' | 'homeScore' | 'awayScore' | 'homeTeamId' | 'awayTeamId' | 'winnerTeamId'>,
 ) {
+  if (match.status !== 'FINISHED') {
+    return 0;
+  }
+
   if (match.phase === 'GROUP') {
     if (match.homeScore == null || match.awayScore == null) {
       return 0;

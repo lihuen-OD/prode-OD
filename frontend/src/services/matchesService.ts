@@ -26,25 +26,31 @@ function saveMatches(matches: Match[]): void {
 }
 
 function buildMatchPayload(data: any) {
+  const phase = data.phase ?? 'GROUP';
+  const isGroup = phase === 'GROUP';
+  const clean = (value: unknown) => typeof value === 'string' && value.trim() ? value.trim() : null;
+  const homeTeam = clean(data.homeTeam);
+  const awayTeam = clean(data.awayTeam);
+
   return {
     tournamentId: 'current',
-    phase: data.phase ?? 'GROUP',
-    predictionType: data.predictionType ?? ((data.phase ?? 'GROUP') === 'GROUP' ? 'RESULT_1X2' : 'QUALIFIER'),
-    groupName: data.group,
-    homeTeam: {
-      name: data.homeTeam,
-      shortName: data.homeTeam.slice(0, 3).toUpperCase(),
+    phase,
+    predictionType: isGroup ? 'RESULT_1X2' : 'QUALIFIER',
+    groupName: isGroup ? clean(data.group) : null,
+    homeTeam: homeTeam ? {
+      name: homeTeam,
+      shortName: homeTeam.slice(0, 3).toUpperCase(),
       flagUrl: data.homeFlag,
-    },
-    awayTeam: {
-      name: data.awayTeam,
-      shortName: data.awayTeam.slice(0, 3).toUpperCase(),
+    } : null,
+    awayTeam: awayTeam ? {
+      name: awayTeam,
+      shortName: awayTeam.slice(0, 3).toUpperCase(),
       flagUrl: data.awayFlag,
-    },
+    } : null,
     startTime: data.startTime ?? buildTournamentDateTimeIso(data.date, data.time),
     matchDate: buildTournamentDateTimeIso(data.date, data.time),
-    homePlaceholder: data.homePlaceholder ?? null,
-    awayPlaceholder: data.awayPlaceholder ?? null,
+    homePlaceholder: isGroup ? null : clean(data.homePlaceholder),
+    awayPlaceholder: isGroup ? null : clean(data.awayPlaceholder),
     status: data.status,
     venue: data.venue ?? null,
   };
@@ -132,37 +138,36 @@ export const matchesService = {
 
     const current = await matchesService.getById(id);
     if (!current) return null;
+    const payload = buildMatchPayload({
+      ...current,
+      ...data,
+      group: data.group ?? current.group,
+      date: data.date ?? current.date,
+      time: data.time ?? current.time,
+      homeTeam: data.homeTeam ?? (current.homeTeamId ? current.homeTeam : ''),
+      awayTeam: data.awayTeam ?? (current.awayTeamId ? current.awayTeam : ''),
+      homePlaceholder: data.homePlaceholder ?? current.homePlaceholder,
+      awayPlaceholder: data.awayPlaceholder ?? current.awayPlaceholder,
+      status: data.status ?? current.status,
+      venue: data.venue ?? current.venue ?? null,
+    });
+    delete (payload as any).tournamentId;
 
     const response = await apiFetch<{ match: any }>(`/admin/matches/${id}`, {
       method: 'PUT',
-      body: JSON.stringify({
-        groupName: data.group ?? current.group,
-        homeTeam: {
-          name: data.homeTeam ?? current.homeTeam,
-          shortName: (data.homeTeam ?? current.homeTeam).slice(0, 3).toUpperCase(),
-          flagUrl: data.homeFlag ?? current.homeFlag,
-        },
-        awayTeam: {
-          name: data.awayTeam ?? current.awayTeam,
-          shortName: (data.awayTeam ?? current.awayTeam).slice(0, 3).toUpperCase(),
-          flagUrl: data.awayFlag ?? current.awayFlag,
-        },
-        matchDate: buildTournamentDateTimeIso(data.date ?? current.date, data.time ?? current.time),
-        status: data.status ?? current.status,
-        venue: data.venue ?? current.venue ?? null,
-      }),
+      body: JSON.stringify(payload),
     });
     return mapMatch(response.match);
   },
 
-  async setResult(id: string, result: PredictionChoice): Promise<Match | null> {
+  async setResult(id: string, result: { homeScore: number; awayScore: number; winnerTeamId?: string | null } | PredictionChoice): Promise<Match | null> {
     if (USE_MOCKS) {
       return matchesService.update(id, { result, status: 'FINISHED' });
     }
 
     const response = await apiFetch<{ match: any }>(`/admin/matches/${id}/result`, {
       method: 'PUT',
-      body: JSON.stringify({ result }),
+      body: JSON.stringify(result),
     });
     return mapMatch(response.match);
   },

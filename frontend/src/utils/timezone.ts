@@ -91,3 +91,8 @@ export function formatTournamentDateLabel(value: string | Date): string {
     month: 'short',
   }).format(typeof value === 'string' ? new Date(value) : value);
 }
+
+export function formatTournamentDateTimeLabel(value: string | Date): string {
+  const parts = getDateTimeParts(value);
+  return `${parts.day}/${parts.month}/${parts.year} ${parts.hour}:${parts.minute}`;
+}

@@ -75,6 +75,19 @@ const getMatchTimelineState = (match: Match, now: Date): MatchTimelineState => {
     };
   }
 
+  if (match.phase !== 'GROUP' && (!match.homeTeamId || !match.awayTeamId)) {
+    return {
+      bucket: 'future',
+      label: 'Cruce pendiente',
+      description: 'Todavia faltan definir los dos equipos reales.',
+      wrapperClass: 'border-amber-200 bg-amber-50/70',
+      headerClass: 'bg-amber-50 border-amber-100',
+      badgeClass: 'bg-amber-100 text-amber-800 border border-amber-200',
+      badgeLabel: 'Pendiente',
+      canSelect: false,
+    };
+  }
+
   if (match.status === 'LOCKED' || match.status === 'LIVE') {
     return {
       bucket: 'live',
@@ -130,8 +143,10 @@ const getMatchTimelineState = (match: Match, now: Date): MatchTimelineState => {
   };
 };
 
+const getResultGroupLabel = (match: Match) => match.phase === 'GROUP' && match.group ? `Grupo ${match.group}` : phaseLabel[match.phase];
+
 const compareMatchByGroupDateTime = (a: Match, b: Match) => {
-  const groupCompare = (a.group ?? a.phase).localeCompare(b.group ?? b.phase, 'es', { numeric: true });
+  const groupCompare = getResultGroupLabel(a).localeCompare(getResultGroupLabel(b), 'es', { numeric: true });
   if (groupCompare !== 0) return groupCompare;
 
   const dateTimeCompare = getMatchTimestamp(a) - getMatchTimestamp(b);
@@ -145,9 +160,10 @@ const groupMatchesByGroup = (list: Match[]) => {
   const grouped = new Map<string, Match[]>();
 
   sorted.forEach(match => {
-    const current = grouped.get(match.group ?? match.phase) ?? [];
+    const key = getResultGroupLabel(match);
+    const current = grouped.get(key) ?? [];
     current.push(match);
-    grouped.set(match.group ?? match.phase, current);
+    grouped.set(key, current);
   });
 
   return [...grouped.entries()];
@@ -245,7 +261,15 @@ function ResultMatchCard({
           <div className="flex items-center justify-between gap-3 flex-wrap rounded-xl border border-emerald-100 bg-white/80 px-3 py-2">
             <p className="text-sm text-slate-600">
               Resultado cargado:
-              <span className="ml-2 font-bold text-emerald-700">{match.result ? choiceLabel[match.result] : 'Sin resultado visible'}</span>
+              <span className="ml-2 font-bold text-emerald-700">
+                {match.result
+                  ? match.phase === 'GROUP'
+                    ? choiceLabel[match.result]
+                    : match.result === 'HOME'
+                      ? `Clasifico ${match.homeTeam}`
+                      : `Clasifico ${match.awayTeam}`
+                  : 'Sin resultado visible'}
+              </span>
             </p>
             <StatusBadge type="match" value="FINISHED" />
           </div>
@@ -532,7 +556,7 @@ export function AdminResultsPage() {
         {section.groupedMatches.map(([group, groupMatches]) => (
           <div key={group}>
             <div className="flex items-center justify-between gap-3 mb-3">
-              <h3 className="text-sm font-bold text-slate-700">Grupo {group}</h3>
+              <h3 className="text-sm font-bold text-slate-700">{group}</h3>
               <span className="text-xs font-semibold text-slate-500 bg-white px-2.5 py-1 rounded-full border border-slate-200">
                 {groupMatches.length} partido{groupMatches.length === 1 ? '' : 's'}
               </span>

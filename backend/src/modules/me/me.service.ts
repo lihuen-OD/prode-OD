@@ -15,8 +15,8 @@ type MatchRow = {
   winnerTeamId: string | null;
   homePlaceholder: string | null;
   awayPlaceholder: string | null;
-  homeTeam: { id: string; name: string; shortName?: string | null; flagUrl?: string | null };
-  awayTeam: { id: string; name: string; shortName?: string | null; flagUrl?: string | null };
+  homeTeam: { id: string; name: string; shortName?: string | null; flagUrl?: string | null } | null;
+  awayTeam: { id: string; name: string; shortName?: string | null; flagUrl?: string | null } | null;
   winnerTeam?: { id: string; name: string; shortName?: string | null; flagUrl?: string | null } | null;
   predictions: Array<{ id: string; choice: 'HOME' | 'DRAW' | 'AWAY'; points: number; isCorrect?: boolean | null }>;
 };

@@ -4,7 +4,7 @@ import type { Match, Prediction } from '../../types';
 import { StatusBadge } from './StatusBadge';
 import { PredictionSelector } from './PredictionSelector';
 import type { PredictionChoice } from '../../types';
-import { formatTournamentDateLabel } from '../../utils/timezone';
+import { formatTournamentDateTimeLabel } from '../../utils/timezone';
 import { FlagIcon } from './FlagIcon';
 
 const phaseLabels: Record<Match['phase'], string> = {
@@ -43,6 +43,9 @@ export function MatchCard({
   const hasResult = match.status === 'FINISHED' && match.result;
   const predictionCorrect = prediction?.isCorrect;
   const isQualifier = match.phase !== 'GROUP';
+  const isPendingQualifier = isQualifier && (!match.homeTeamId || !match.awayTeamId);
+  const isDeadlineClosed = new Date(match.predictionDeadline).getTime() <= Date.now();
+  const isPredictionDisabled = disabled || isPendingQualifier || isDeadlineClosed || match.status !== 'OPEN';
   const displayGroup = match.phase === 'GROUP' && match.group ? `Grupo ${match.group}` : phaseLabels[match.phase];
   const selectedLabel = prediction ? (isQualifier ? (prediction.choice === 'HOME' ? match.homeTeam : match.awayTeam) : choiceLabel[prediction.choice]) : '';
   const resultText = match.phase === 'GROUP'
@@ -95,11 +98,11 @@ export function MatchCard({
       <div className="flex flex-wrap items-center justify-center gap-3 mb-3 text-xs text-slate-400">
         <span className="flex items-center gap-1">
           <Calendar className="w-3 h-3" />
-          {formatTournamentDateLabel(`${match.date}T12:00:00-03:00`)}
+          {formatTournamentDateTimeLabel(match.startTime)}
         </span>
         <span className="flex items-center gap-1">
           <Clock className="w-3 h-3" />
-          {match.time}
+          Cierra {formatTournamentDateTimeLabel(match.predictionDeadline)}
         </span>
         {match.venue && !compact && (
           <span className="flex items-center gap-1">
@@ -112,7 +115,19 @@ export function MatchCard({
       {/* Prediction row */}
       {onPredict && (
         <div className="mt-3 pt-3 border-t border-slate-100">
-          {disabled && prediction?.choice && (
+          {isPendingQualifier && (
+            <div className="rounded-xl border border-amber-100 bg-amber-50 px-3 py-2 text-center mb-2">
+              <p className="text-xs font-bold text-amber-800">Cruce pendiente de definicion</p>
+              <p className="text-xs text-amber-700 mt-0.5">Todavia no disponible para votar</p>
+            </div>
+          )}
+          {!isPendingQualifier && isDeadlineClosed && match.status !== 'FINISHED' && (
+            <p className="text-xs text-slate-500 mb-2 text-center">Prediccion cerrada</p>
+          )}
+          {!isPendingQualifier && !isDeadlineClosed && isQualifier && (
+            <p className="text-xs font-semibold text-slate-600 mb-2 text-center">Quien clasifica?</p>
+          )}
+          {isPredictionDisabled && prediction?.choice && (
             <p className="text-xs text-slate-400 mb-2 text-center sm:text-left">
               Tu pronóstico: <span className="font-semibold text-slate-600">{selectedLabel}</span>
               {prediction.points !== undefined && (
@@ -125,15 +140,17 @@ export function MatchCard({
               )}
             </p>
           )}
-          <PredictionSelector
-            value={prediction?.choice}
-            onChange={(choice) => onPredict(match.id, choice)}
-            disabled={disabled}
-            size={compact ? 'sm' : 'md'}
-            mode={isQualifier ? 'qualifier' : 'group'}
-            homeLabel={match.homeTeam}
-            awayLabel={match.awayTeam}
-          />
+          {!isPendingQualifier && (
+            <PredictionSelector
+              value={prediction?.choice}
+              onChange={(choice) => onPredict(match.id, choice)}
+              disabled={isPredictionDisabled}
+              size={compact ? 'sm' : 'md'}
+              mode={isQualifier ? 'qualifier' : 'group'}
+              homeLabel={match.homeTeam}
+              awayLabel={match.awayTeam}
+            />
+          )}
         </div>
       )}
     </div>
