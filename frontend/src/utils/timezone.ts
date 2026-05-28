@@ -62,7 +62,13 @@ function normalizeTimeValue(value: string): string {
 }
 
 export function buildTournamentDateTimeIso(date: string, time: string): string {
-  return `${date}T${normalizeTimeValue(time)}:00${ARGENTINA_OFFSET}`;
+  const trimmedDate = date.trim();
+  const argentinaDate = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(trimmedDate);
+  const normalizedDate = argentinaDate
+    ? `${argentinaDate[3]}-${argentinaDate[2].padStart(2, '0')}-${argentinaDate[1].padStart(2, '0')}`
+    : trimmedDate;
+
+  return `${normalizedDate}T${normalizeTimeValue(time)}:00${ARGENTINA_OFFSET}`;
 }
 
 export function parseTournamentDateTime(date: string, time: string): Date {

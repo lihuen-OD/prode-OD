@@ -31,6 +31,9 @@ function buildMatchPayload(data: any) {
   const clean = (value: unknown) => typeof value === 'string' && value.trim() ? value.trim() : null;
   const homeTeam = clean(data.homeTeam);
   const awayTeam = clean(data.awayTeam);
+  const matchDate = data.date && data.time
+    ? buildTournamentDateTimeIso(data.date, data.time)
+    : data.startTime;
 
   return {
     tournamentId: 'current',
@@ -47,8 +50,8 @@ function buildMatchPayload(data: any) {
       shortName: awayTeam.slice(0, 3).toUpperCase(),
       flagUrl: data.awayFlag,
     } : null,
-    startTime: data.startTime ?? buildTournamentDateTimeIso(data.date, data.time),
-    matchDate: buildTournamentDateTimeIso(data.date, data.time),
+    startTime: matchDate,
+    matchDate,
     homePlaceholder: isGroup ? null : clean(data.homePlaceholder),
     awayPlaceholder: isGroup ? null : clean(data.awayPlaceholder),
     status: data.status,

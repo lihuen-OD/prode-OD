@@ -184,7 +184,7 @@ export async function createAdminMatch(data: {
 
   validateMatchShape(data);
 
-  const startValue = data.startTime ?? data.matchDate;
+  const startValue = data.matchDate ?? data.startTime;
   if (!startValue) {
     throw new AppError('La fecha y hora de inicio es obligatoria', 400);
   }
@@ -248,8 +248,8 @@ export async function updateAdminMatch(id: string, data: {
     throw new AppError('Partido no encontrado', 404);
   }
 
-  if (current.status !== 'OPEN' && (data.homeTeam || data.awayTeam || data.phase || data.predictionType || data.startTime || data.matchDate || data.groupName || data.homePlaceholder || data.awayPlaceholder)) {
-    throw new AppError('No se pueden modificar los equipos, fase o fecha de un partido cerrado o finalizado', 403);
+  if (current.status === 'FINISHED' && (data.homeTeam || data.awayTeam || data.phase || data.predictionType || data.startTime || data.matchDate || data.groupName || data.homePlaceholder || data.awayPlaceholder)) {
+    throw new AppError('No se pueden modificar los equipos, fase o fecha de un partido finalizado', 403);
   }
 
   const nextPhase = data.phase ?? current.phase;
@@ -262,7 +262,7 @@ export async function updateAdminMatch(id: string, data: {
     awayPlaceholder: data.awayPlaceholder !== undefined ? data.awayPlaceholder : current.awayPlaceholder,
   });
 
-  const startValue = data.startTime ?? data.matchDate;
+  const startValue = data.matchDate ?? data.startTime;
   const nextStartTime = startValue ? parseArgentinaDateTime(startValue) : current.startTime;
   if (startValue && Number.isNaN(nextStartTime.getTime())) {
     throw new AppError('La fecha y hora de inicio no es válida', 400);
