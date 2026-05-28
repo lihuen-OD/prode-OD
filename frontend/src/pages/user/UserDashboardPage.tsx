@@ -1,9 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { Trophy, Target, CheckCircle, Calendar, Clock, TrendingUp } from 'lucide-react';
+import { Trophy, Target, CheckCircle, Calendar, TrendingUp } from 'lucide-react';
 import { AppLayout } from '../../layouts/AppLayout';
 import { useAuth } from '../../hooks/useAuth';
-import { useProdeStatus } from '../../hooks/useProdeStatus';
-import { LockBanner } from '../../components/ui/LockBanner';
 import { Link } from 'react-router-dom';
 import { getMyDashboard } from '../../services/meService';
 
@@ -32,18 +30,8 @@ function StatCard({ label, value, icon, color, sub }: StatCardProps) {
   );
 }
 
-function getCountdown(closeAt: string) {
-  const diff = new Date(closeAt).getTime() - Date.now();
-  if (diff <= 0) return { days: 0, hours: 0, minutes: 0 };
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  return { days, hours, minutes };
-}
-
 export function UserDashboardPage() {
   const { user } = useAuth();
-  const { isOpen, countdown, nextClosingMatch } = useProdeStatus();
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
 
   useEffect(() => {
@@ -67,39 +55,15 @@ export function UserDashboardPage() {
     totalCorrect: dashboard.summary.correctCount,
     totalPredicted: dashboard.summary.predictedCount,
   };
-  const countdownData = nextClosingMatch ? getCountdown(nextClosingMatch.predictionDeadline) : countdown;
 
   return (
     <AppLayout variant="user">
       <div className="mb-6">
         <h1 className="text-2xl font-black text-slate-900 font-display">
-          Hola, {user.fullName.split(' ')[0]} 👋
+          Hola, {user.fullName.split(' ')[0]}
         </h1>
         <p className="text-slate-500 text-sm mt-0.5">Prode Mundial 2026 · LOS O'DWYER</p>
       </div>
-
-      {!isOpen && <LockBanner />}
-
-      {isOpen && (
-        <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 mb-6 flex items-center gap-3">
-          <div className="p-2 bg-blue-100 rounded-xl">
-            <Clock className="w-5 h-5 text-blue-600" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-blue-800">El prode está abierto</p>
-            <p className="text-xs text-blue-600">
-              Próximo cierre: <strong>{nextClosingMatch ? `${nextClosingMatch.homeTeamName} vs ${nextClosingMatch.awayTeamName}` : 'sin partidos abiertos'}</strong>
-              {' '}· {countdownData.days}d {countdownData.hours}h {countdownData.minutes}m.
-            </p>
-          </div>
-          <Link
-            to="/app/pronosticos"
-            className="ml-auto bg-blue-700 text-white text-xs font-bold px-4 py-2 rounded-xl hover:bg-blue-800 transition-colors flex-shrink-0"
-          >
-            Ir ahora →
-          </Link>
-        </div>
-      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard
@@ -107,10 +71,10 @@ export function UserDashboardPage() {
           value={stats.totalPoints}
           icon={<Trophy className="w-4 h-4 text-amber-600" />}
           color="bg-amber-50"
-          sub="3 pts por acierto"
+          sub="Aciertos por fase"
         />
         <StatCard
-          label="Posición"
+          label="Posicion"
           value={myRank ? `#${myRank}` : '-'}
           icon={<TrendingUp className="w-4 h-4 text-blue-600" />}
           color="bg-blue-50"
@@ -124,11 +88,11 @@ export function UserDashboardPage() {
           sub={`de ${stats.totalPredicted} pronosticados`}
         />
         <StatCard
-          label="Pronósticos"
+          label="Pronosticos"
           value={`${stats.totalPredicted}/${totalMatches}`}
           icon={<Target className="w-4 h-4 text-indigo-600" />}
           color="bg-indigo-50"
-          sub={isOpen ? `${totalMatches - stats.totalPredicted} pendientes` : 'Cerrado'}
+          sub={`${Math.max(totalMatches - stats.totalPredicted, 0)} pendientes`}
         />
       </div>
 
@@ -138,12 +102,12 @@ export function UserDashboardPage() {
           className="bg-gradient-to-br from-blue-700 to-blue-600 rounded-2xl p-6 text-white card-hover group min-w-0"
         >
           <Calendar className="w-8 h-8 text-blue-200 mb-3" />
-          <h3 className="font-bold text-lg mb-1">Mis pronósticos</h3>
+          <h3 className="font-bold text-lg mb-1">Mis pronosticos</h3>
           <p className="text-blue-200 text-sm">
-            {isOpen ? 'Completá o editá tus pronósticos del Mundial.' : 'Ver tus pronósticos y resultados.'}
+            Completa o revisa tus pronosticos del Mundial.
           </p>
           <span className="mt-4 inline-block text-sm font-semibold text-blue-200 group-hover:text-white transition-colors">
-            Ir a pronósticos →
+            Ir a pronosticos →
           </span>
         </Link>
 
@@ -154,7 +118,7 @@ export function UserDashboardPage() {
           <Trophy className="w-8 h-8 text-amber-400 mb-3" />
           <h3 className="font-bold text-lg text-slate-800 mb-1">Ranking general</h3>
           <p className="text-slate-500 text-sm">
-            {myRank ? `Estás en la posición #${myRank} con ${dashboard.summary.points} puntos.` : 'Ver la tabla de posiciones del club.'}
+            {myRank ? `Estas en la posicion #${myRank} con ${dashboard.summary.points} puntos.` : 'Ver la tabla de posiciones del club.'}
           </p>
           <span className="mt-4 inline-block text-sm font-semibold text-blue-600 group-hover:text-blue-800 transition-colors">
             Ver ranking →

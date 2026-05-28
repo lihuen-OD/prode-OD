@@ -554,7 +554,7 @@ export function AdminResultsPage() {
         subtitle="Ingresá el resultado real de cada partido finalizado"
       />
 
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 mb-6">
+      <div className="hidden bg-white rounded-2xl border border-slate-100 shadow-sm p-5 mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
           <h3 className="font-bold text-slate-800 text-sm">Fuente de resultados</h3>
         </div>
