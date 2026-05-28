@@ -381,13 +381,19 @@ export async function setMatchResult(id: string, data: { result?: PredictionChoi
       select: matchSelect,
     });
 
+    const matchForScoring = {
+      ...finalMatch,
+      homeTeamId: match.homeTeamId,
+      awayTeamId: match.awayTeamId,
+    };
+
     const predictions = await transaction.prediction.findMany({
       where: { matchId: id },
       select: { id: true, choice: true },
     });
 
     for (const prediction of predictions) {
-      const points = calculatePredictionPoints(prediction, finalMatch);
+      const points = calculatePredictionPoints(prediction, matchForScoring);
       await transaction.prediction.update({
         where: { id: prediction.id },
         data: {
