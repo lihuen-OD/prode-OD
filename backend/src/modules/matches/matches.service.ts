@@ -1,9 +1,9 @@
 import { MatchPhase, MatchStatus, PredictionChoice, PredictionType } from '@prisma/client';
 import { prisma } from '../../config/prisma.js';
 import { AppError } from '../../utils/AppError.js';
-import { recalculateRankingSnapshotsWithClient } from '../../utils/ranking.js';
+import { recalculateRankingSnapshots, recalculateRankingSnapshotsWithClient } from '../../utils/ranking.js';
 import { parseArgentinaDateTime } from '../../utils/timezone.js';
-import { calculatePredictionPoints, getPredictionDeadline, getPredictionTypeForPhase, MATCH_PHASE_ORDER } from '../../utils/matchRules.js';
+import { ELIMINATION_POINTS, getPredictionDeadline, getPredictionTypeForPhase, MATCH_PHASE_ORDER } from '../../utils/matchRules.js';
 
 const teamSelect = {
   id: true,
@@ -362,51 +362,48 @@ export async function setMatchResult(id: string, data: { result?: PredictionChoi
     }
   }
 
-  const updated = await prisma.$transaction(async transaction => {
-    const finalWinnerTeamId = match.phase === 'GROUP'
-      ? null
-      : data.winnerTeamId ?? (data.result === 'HOME' ? match.homeTeamId : data.result === 'AWAY' ? match.awayTeamId : null);
+  const finalWinnerTeamId = match.phase === 'GROUP'
+    ? null
+    : data.winnerTeamId ?? (data.result === 'HOME' ? match.homeTeamId : data.result === 'AWAY' ? match.awayTeamId : null);
 
-    const finalMatch = await transaction.match.update({
-      where: { id },
-      data: {
-        status: 'FINISHED',
-        homeScore: data.homeScore ?? null,
-        awayScore: data.awayScore ?? null,
-        winnerTeamId: finalWinnerTeamId,
-        result: match.phase === 'GROUP'
-          ? data.result
-          : (finalWinnerTeamId === match.homeTeamId ? 'HOME' : 'AWAY'),
-      },
-      select: matchSelect,
-    });
+  const finalResult = match.phase === 'GROUP'
+    ? data.result
+    : (finalWinnerTeamId === match.homeTeamId ? 'HOME' : 'AWAY');
 
-    const matchForScoring = {
-      ...finalMatch,
-      homeTeamId: match.homeTeamId,
-      awayTeamId: match.awayTeamId,
-    };
-
-    const predictions = await transaction.prediction.findMany({
-      where: { matchId: id },
-      select: { id: true, choice: true },
-    });
-
-    for (const prediction of predictions) {
-      const points = calculatePredictionPoints(prediction, matchForScoring);
-      await transaction.prediction.update({
-        where: { id: prediction.id },
-        data: {
-          points,
-          isCorrect: points > 0,
-        },
-      });
-    }
-
-    await recalculateRankingSnapshotsWithClient(match.tournamentId, transaction);
-
-    return finalMatch;
+  const updated = await prisma.match.update({
+    where: { id },
+    data: {
+      status: 'FINISHED',
+      homeScore: data.homeScore ?? null,
+      awayScore: data.awayScore ?? null,
+      winnerTeamId: finalWinnerTeamId,
+      result: finalResult,
+    },
+    select: matchSelect,
   });
+
+  const correctPoints = match.phase === 'GROUP'
+    ? 3
+    : ELIMINATION_POINTS[match.phase];
+
+  await prisma.$transaction([
+    prisma.prediction.updateMany({
+      where: { matchId: id, choice: finalResult },
+      data: {
+        points: correctPoints,
+        isCorrect: true,
+      },
+    }),
+    prisma.prediction.updateMany({
+      where: { matchId: id, choice: { not: finalResult } },
+      data: {
+        points: 0,
+        isCorrect: false,
+      },
+    }),
+  ]);
+
+  await recalculateRankingSnapshots(match.tournamentId);
 
   return mapMatch(updated);
 }

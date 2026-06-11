@@ -109,5 +109,17 @@ export async function recalculateRankingSnapshotsWithClient(tournamentId: string
 }
 
 export async function recalculateRankingSnapshots(tournamentId: string) {
-  return prisma.$transaction(async transaction => recalculateRankingSnapshotsWithClient(tournamentId, transaction));
+  const rows = await loadRankingRows(tournamentId, prisma);
+  await prisma.$transaction(transaction => persistRankingSnapshots(tournamentId, rows, transaction));
+
+  return rows.map((row, index) => ({
+    tournamentId,
+    userId: row.userId,
+    fullName: row.fullName,
+    username: row.username,
+    points: row.points,
+    correctCount: row.correctCount,
+    predictedCount: row.predictedCount,
+    position: index + 1,
+  }));
 }
