@@ -11,6 +11,7 @@ import ApiError from '../utils/ApiError';
 
 const TOKEN_KEY = 'odwyer_token';
 const BACKEND_WARM_KEY = 'odwyer_backend_warm';
+const AUTH_KEY = 'odwyer_auth_user';
 
 function isBackendWarm() {
   try {
@@ -111,6 +112,31 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
   if (!response.ok) {
     const serverMessage = typeof payload === 'string' ? payload : payload?.message || 'Error inesperado';
     const fields = payload?.fields ?? undefined;
+
+    // If unauthorized, clear local session and token so user can re-login cleanly.
+    if (response.status === 401) {
+      try {
+        // remove stored auth user and token
+        localStorage.removeItem(AUTH_KEY);
+      } catch {}
+      try {
+        setToken(null);
+      } catch {}
+
+      // allow app hooks to react (optional)
+      try {
+        // @ts-ignore
+        window.__on_unauthorized__ && window.__on_unauthorized__();
+      } catch {}
+
+      // redirect to login route if not already there
+      try {
+        if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
+          window.location.href = '/login';
+        }
+      } catch {}
+    }
+
     throw new ApiError(serverMessage, response.status, fields, payload);
   }
 
