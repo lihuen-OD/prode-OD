@@ -1,6 +1,7 @@
 import type { AuthUser } from '../types';
 import { apiFetch, setToken, USE_MOCKS, getToken } from './apiClient';
 import { mapAuthUser } from './mappers';
+import { clearCache } from './requestCache';
 
 const AUTH_KEY = 'odwyer_auth_user';
 
@@ -16,6 +17,8 @@ const mockUsers: Record<string, AuthUser> = {
 };
 
 function saveSession(user: AuthUser | null, token?: string | null): void {
+  clearCache();
+
   if (!user) {
     localStorage.removeItem(AUTH_KEY);
     setToken(null);

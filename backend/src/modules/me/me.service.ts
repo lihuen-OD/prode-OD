@@ -1,6 +1,7 @@
 import { prisma } from '../../config/prisma.js';
 import { AppError } from '../../utils/AppError.js';
 import { upsertBulkPredictions } from '../predictions/predictions.service.js';
+import { getCachedCurrentTournament } from '../../utils/tournamentCache.js';
 
 type MatchRow = {
   id: string;
@@ -37,19 +38,18 @@ export async function getMeDashboard(userId: string) {
     throw new AppError('Usuario no encontrado', 404);
   }
 
-  const tournament = await prisma.tournament.findFirst({
-    orderBy: { createdAt: 'desc' },
-    select: {
-      id: true,
-      name: true,
-      status: true,
-      predictionsCloseAt: true,
-    },
-  });
+  const tournamentFull = await getCachedCurrentTournament();
 
-  if (!tournament) {
+  if (!tournamentFull) {
     throw new AppError('No hay torneo configurado', 404);
   }
+
+  const tournament = {
+    id: tournamentFull.id,
+    name: tournamentFull.name,
+    status: tournamentFull.status,
+    predictionsCloseAt: tournamentFull.predictionsCloseAt,
+  };
 
   const [snapshot, matches, totalMatches] = await Promise.all([
     prisma.rankingSnapshot.findUnique({

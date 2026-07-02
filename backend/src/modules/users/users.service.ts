@@ -5,6 +5,7 @@ import { AppError } from '../../utils/AppError.js';
 import { recalculateRankingSnapshotsWithClient } from '../../utils/ranking.js';
 import { getPagination } from '../../utils/pagination.js';
 import { stripPasswordHash } from '../../utils/response.js';
+import { getCachedCurrentTournament } from '../../utils/tournamentCache.js';
 
 const participantSelect = {
   id: true,
@@ -16,14 +17,10 @@ const participantSelect = {
   isActive: true,
   createdAt: true,
   updatedAt: true,
-  passwordHash: true,
 } as const;
 
 async function refreshRankingSnapshots(client: any = prisma) {
-  const tournament = await client.tournament.findFirst({
-    orderBy: { createdAt: 'desc' },
-    select: { id: true },
-  });
+  const tournament = await getCachedCurrentTournament();
 
   if (!tournament) {
     return;
@@ -80,7 +77,10 @@ export async function createParticipantUser(data: {
     throw new AppError('No podés crear un admin desde esta ruta', 403);
   }
 
-  const existing = await prisma.user.findUnique({ where: { username: data.username } });
+  const existing = await prisma.user.findUnique({
+    where: { username: data.username },
+    select: { id: true },
+  });
   if (existing) {
     throw new AppError('El usuario ya existe', 409);
   }
@@ -112,7 +112,10 @@ export async function updateParticipantUser(id: string, data: Partial<{
   password: string;
   isActive: boolean;
 }>) {
-  const current = await prisma.user.findUnique({ where: { id } });
+  const current = await prisma.user.findUnique({
+    where: { id },
+    select: { role: true, username: true },
+  });
   if (!current) {
     throw new AppError('Usuario no encontrado', 404);
   }
@@ -122,7 +125,10 @@ export async function updateParticipantUser(id: string, data: Partial<{
   }
 
   if (data.username && data.username !== current.username) {
-    const existing = await prisma.user.findUnique({ where: { username: data.username } });
+    const existing = await prisma.user.findUnique({
+      where: { username: data.username },
+      select: { id: true },
+    });
     if (existing) {
       throw new AppError('El usuario ya existe', 409);
     }
@@ -151,7 +157,10 @@ export async function updateParticipantUser(id: string, data: Partial<{
 }
 
 export async function softDeleteUser(id: string) {
-  const current = await prisma.user.findUnique({ where: { id } });
+  const current = await prisma.user.findUnique({
+    where: { id },
+    select: { role: true },
+  });
   if (!current) {
     throw new AppError('Usuario no encontrado', 404);
   }

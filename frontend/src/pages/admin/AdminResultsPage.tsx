@@ -438,7 +438,7 @@ export function AdminResultsPage() {
 
   const handleSetResult = async (match: Match, result: PredictionChoice) => {
     try {
-      await matchesService.setResult(match.id, {
+      const updated = await matchesService.setResult(match.id, {
         result,
         winnerTeamId: match.phase === 'GROUP'
           ? null
@@ -453,7 +453,9 @@ export function AdminResultsPage() {
         return next;
       });
 
-      void refresh();
+      if (updated) {
+        setMatches(prev => prev.map(m => (m.id === updated.id ? updated : m)));
+      }
       showSuccessToast('Resultado actualizado correctamente.');
     } catch (err) {
       showErrorToast(err);

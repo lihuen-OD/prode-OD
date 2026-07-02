@@ -4,6 +4,7 @@ import { authService } from './authService';
 import { mapMatch } from './mappers';
 import { mockMatches } from '../mocks/data';
 import { buildTournamentDateTimeIso } from '../utils/timezone';
+import { fetchSharedDashboard } from './dashboardCache';
 
 const STORAGE_KEY = 'odwyer_matches';
 let cachedTournamentId: string | null = null;
@@ -66,7 +67,7 @@ async function loadRemoteMatches(): Promise<Match[]> {
     return response.matches.map(mapMatch);
   }
 
-  const response = await apiFetch<{ matches: any[] }>('/me/dashboard');
+  const response = await fetchSharedDashboard();
   return response.matches.map(mapMatch);
 }
 

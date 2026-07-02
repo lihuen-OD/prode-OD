@@ -2,47 +2,43 @@ import { Prisma } from '@prisma/client';
 import { prisma } from '../../config/prisma.js';
 import { AppError } from '../../utils/AppError.js';
 import { parseArgentinaDateTime } from '../../utils/timezone.js';
+import { getCachedCurrentTournament, invalidateTournamentCache } from '../../utils/tournamentCache.js';
 
 const CLUB_NAME = "LOS O'DWYER";
 
 export async function getPublicSettings() {
-  const tournament = await prisma.tournament.findFirst({
-    orderBy: { createdAt: 'desc' },
-    select: {
-      name: true,
-    },
-  });
-
-  const nextClosingMatch = await prisma.match.findFirst({
-    where: {
-      status: 'OPEN',
-      predictionDeadline: { gt: new Date() },
-      OR: [
-        { phase: 'GROUP' },
-        {
-          phase: { not: 'GROUP' },
-          homeTeamId: { not: null },
-          awayTeamId: { not: null },
-        },
-      ],
-    },
-    orderBy: { predictionDeadline: 'asc' },
-    select: {
-      id: true,
-      phase: true,
-      predictionDeadline: true,
-      startTime: true,
-      homePlaceholder: true,
-      awayPlaceholder: true,
-      homeTeam: { select: { name: true } },
-      awayTeam: { select: { name: true } },
-    },
-  });
-
-  const appSetting = await prisma.appSetting.findFirst({
-    orderBy: { createdAt: 'desc' },
-    select: { resultsSource: true },
-  });
+  const [tournament, nextClosingMatch, appSetting] = await Promise.all([
+    getCachedCurrentTournament(),
+    prisma.match.findFirst({
+      where: {
+        status: 'OPEN',
+        predictionDeadline: { gt: new Date() },
+        OR: [
+          { phase: 'GROUP' },
+          {
+            phase: { not: 'GROUP' },
+            homeTeamId: { not: null },
+            awayTeamId: { not: null },
+          },
+        ],
+      },
+      orderBy: { predictionDeadline: 'asc' },
+      select: {
+        id: true,
+        phase: true,
+        predictionDeadline: true,
+        startTime: true,
+        homePlaceholder: true,
+        awayPlaceholder: true,
+        homeTeam: { select: { name: true } },
+        awayTeam: { select: { name: true } },
+      },
+    }),
+    prisma.appSetting.findFirst({
+      orderBy: { createdAt: 'desc' },
+      select: { resultsSource: true },
+    }),
+  ]);
 
   if (!tournament) {
     throw new AppError('No hay torneo configurado', 404);
@@ -70,10 +66,7 @@ export async function updateAdminSettings(data: {
   status?: 'OPEN' | 'CLOSED' | 'FINISHED';
   resultsSource?: 'MANUAL' | 'API';
 }) {
-  const tournament = await prisma.tournament.findFirst({
-    orderBy: { createdAt: 'desc' },
-    select: { id: true },
-  });
+  const tournament = await getCachedCurrentTournament();
 
   if (!tournament) {
     throw new AppError('No hay torneo configurado', 404);
@@ -102,6 +95,8 @@ export async function updateAdminSettings(data: {
       }
     }
   });
+
+  invalidateTournamentCache();
 
   return getPublicSettings();
 }

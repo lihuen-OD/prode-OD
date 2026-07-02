@@ -1,11 +1,15 @@
 import { PredictionChoice } from '@prisma/client';
 import { prisma } from '../../config/prisma.js';
 import { AppError } from '../../utils/AppError.js';
-import { recalculateRankingSnapshotsWithClient } from '../../utils/ranking.js';
+import { scheduleRankingRecalculation } from '../../utils/ranking.js';
 import { canPredict, isQualifierPhase } from '../../utils/matchRules.js';
+import { getCachedCurrentTournament } from '../../utils/tournamentCache.js';
 
 export async function upsertBulkPredictions(userId: string, items: Array<{ matchId: string; choice: PredictionChoice }>) {
-  const user = await prisma.user.findUnique({ where: { id: userId } });
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { isActive: true, role: true },
+  });
   if (!user || !user.isActive) {
     throw new AppError('Usuario inactivo o no encontrado', 403);
   }
@@ -16,7 +20,7 @@ export async function upsertBulkPredictions(userId: string, items: Array<{ match
 
   // Payment requirement removed: allow active users to predict
 
-  const tournament = await prisma.tournament.findFirst({ orderBy: { createdAt: 'desc' } });
+  const tournament = await getCachedCurrentTournament();
   if (!tournament) {
     throw new AppError('No hay torneo configurado', 404);
   }
@@ -68,36 +72,55 @@ export async function upsertBulkPredictions(userId: string, items: Array<{ match
     }
   }
 
+  const predictionSelect = {
+    id: true,
+    userId: true,
+    matchId: true,
+    choice: true,
+    points: true,
+    isCorrect: true,
+    createdAt: true,
+    updatedAt: true,
+  } as const;
+
   const upserts = await prisma.$transaction(async transaction => {
-    const createdAt = new Date();
+    const updatedAt = new Date();
 
-    const result = await Promise.all(items.map(async item => {
-      const prediction = await transaction.prediction.upsert({
-        where: {
-          userId_matchId: {
-            userId,
-            matchId: item.matchId,
-          },
-        },
-        create: {
-          userId,
-          matchId: item.matchId,
-          choice: item.choice,
-        },
-        update: {
-          choice: item.choice,
-          points: 0,
-          isCorrect: null,
-          updatedAt: createdAt,
-        },
+    const existing = await transaction.prediction.findMany({
+      where: { userId, matchId: { in: uniqueMatchIds } },
+      select: { matchId: true, choice: true },
+    });
+    const existingByMatchId = new Map(existing.map(p => [p.matchId, p.choice]));
+
+    const itemByMatchId = new Map(items.map(item => [item.matchId, item]));
+    const toCreate = [...itemByMatchId.values()].filter(item => !existingByMatchId.has(item.matchId));
+    const toUpdate = [...itemByMatchId.values()].filter(
+      item => existingByMatchId.has(item.matchId) && existingByMatchId.get(item.matchId) !== item.choice,
+    );
+
+    if (toCreate.length > 0) {
+      await transaction.prediction.createMany({
+        data: toCreate.map(item => ({ userId, matchId: item.matchId, choice: item.choice })),
       });
+    }
 
-      return prediction;
-    }));
+    await Promise.all(toUpdate.map(item =>
+      transaction.prediction.update({
+        where: { userId_matchId: { userId, matchId: item.matchId } },
+        data: { choice: item.choice, points: 0, isCorrect: null, updatedAt },
+      }),
+    ));
 
-    await recalculateRankingSnapshotsWithClient(tournament.id, transaction);
-    return result;
+    const final = await transaction.prediction.findMany({
+      where: { userId, matchId: { in: uniqueMatchIds } },
+      select: predictionSelect,
+    });
+    const finalByMatchId = new Map(final.map(p => [p.matchId, p]));
+
+    return items.map(item => finalByMatchId.get(item.matchId)!);
   });
+
+  scheduleRankingRecalculation(tournament.id);
 
   return upserts;
 }

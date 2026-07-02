@@ -9,23 +9,23 @@ type TopRankingEntry = {
 import { getAdminUserStats } from '../users/users.service.js';
 import { getMatchStats, getLastResults } from '../matches/matches.service.js';
 import { AppError } from '../../utils/AppError.js';
+import { getCachedCurrentTournament } from '../../utils/tournamentCache.js';
 
 export async function getAdminDashboard() {
-  const tournament = await prisma.tournament.findFirst({
-    orderBy: { createdAt: 'desc' },
-    select: {
-      id: true,
-      name: true,
-      status: true,
-      predictionsCloseAt: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-  });
+  const tournamentFull = await getCachedCurrentTournament();
 
-  if (!tournament) {
+  if (!tournamentFull) {
     throw new AppError('No hay torneo configurado', 404);
   }
+
+  const tournament = {
+    id: tournamentFull.id,
+    name: tournamentFull.name,
+    status: tournamentFull.status,
+    predictionsCloseAt: tournamentFull.predictionsCloseAt,
+    createdAt: tournamentFull.createdAt,
+    updatedAt: tournamentFull.updatedAt,
+  };
 
   const [userStats, matchStats, topRanking, lastResults] = await Promise.all([
     getAdminUserStats(),

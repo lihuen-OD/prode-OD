@@ -8,6 +8,7 @@ export const API_URL = rawApiUrl.replace(/\/$/, '').endsWith('/api')
 export const USE_MOCKS = String(import.meta.env.VITE_USE_MOCKS ?? 'true') === 'true';
 
 import ApiError from '../utils/ApiError';
+import { withCache } from './requestCache';
 
 const TOKEN_KEY = 'odwyer_token';
 const BACKEND_WARM_KEY = 'odwyer_backend_warm';
@@ -42,6 +43,14 @@ export function setToken(token: string | null): void {
 }
 
 export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const method = (init.method ?? 'GET').toUpperCase();
+  if (method !== 'GET') {
+    return performFetch<T>(path, init);
+  }
+  return withCache<T>(`GET ${path}`, 0, () => performFetch<T>(path, init));
+}
+
+async function performFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers || {});
   headers.set('Content-Type', 'application/json');
 

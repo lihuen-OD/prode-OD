@@ -123,3 +123,24 @@ export async function recalculateRankingSnapshots(tournamentId: string) {
     position: index + 1,
   }));
 }
+
+// Guardar una predicción individual no puede cambiar `points`/`correctCount` de nadie
+// (eso solo cambia con un resultado de partido, ver matchRules.ts); por eso ese caso
+// puede diferirse y coalescerse en vez de recalcular el ranking completo en cada guardado.
+const pendingRankingRecalculations = new Map<string, NodeJS.Timeout>();
+const RANKING_RECALC_DEBOUNCE_MS = 20_000;
+
+export function scheduleRankingRecalculation(tournamentId: string, delayMs = RANKING_RECALC_DEBOUNCE_MS) {
+  if (pendingRankingRecalculations.has(tournamentId)) {
+    return;
+  }
+
+  const timer = setTimeout(() => {
+    pendingRankingRecalculations.delete(tournamentId);
+    recalculateRankingSnapshots(tournamentId).catch(error => {
+      console.error(`[ranking] fallo al recalcular ranking diferido (tournament ${tournamentId})`, error);
+    });
+  }, delayMs);
+  timer.unref?.();
+  pendingRankingRecalculations.set(tournamentId, timer);
+}

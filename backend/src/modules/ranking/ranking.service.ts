@@ -1,11 +1,9 @@
 import { prisma } from '../../config/prisma.js';
 import { AppError } from '../../utils/AppError.js';
+import { getCachedCurrentTournament } from '../../utils/tournamentCache.js';
 
 export async function getRanking(limit = 100, userId?: string) {
-  const tournament = await prisma.tournament.findFirst({
-    orderBy: { createdAt: 'desc' },
-    select: { id: true },
-  });
+  const tournament = await getCachedCurrentTournament();
 
   if (!tournament) {
     throw new AppError('No hay torneo configurado', 404);

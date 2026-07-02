@@ -371,13 +371,14 @@ export function AdminMatchesPage() {
   const handleSave = async (data: MatchFormData) => {
     try {
       if (modal.match) {
-        await matchesService.update(modal.match.id, data);
+        const updated = await matchesService.update(modal.match.id, data);
+        if (updated) setMatches(prev => prev.map(m => (m.id === updated.id ? updated : m)));
         showSuccessToast('Partido actualizado correctamente.');
       } else {
-        await matchesService.create(data);
+        const created = await matchesService.create(data);
+        setMatches(prev => [...prev, created]);
         showSuccessToast('Partido creado correctamente.');
       }
-      void refresh();
       setModal({ open: false });
     } catch (err) {
       showErrorToast(err);
@@ -388,10 +389,11 @@ export function AdminMatchesPage() {
     if (!deleteModal.match) return;
     setDeleting(true);
     try {
-      await matchesService.delete(deleteModal.match.id);
+      const deletedId = deleteModal.match.id;
+      await matchesService.delete(deletedId);
       showSuccessToast('Partido eliminado correctamente.');
       setDeleteModal({ open: false });
-      void refresh();
+      setMatches(prev => prev.filter(m => m.id !== deletedId));
     } catch (err) {
       showErrorToast(err);
     } finally {

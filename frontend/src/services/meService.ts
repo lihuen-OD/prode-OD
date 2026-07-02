@@ -1,8 +1,9 @@
-import { apiFetch, USE_MOCKS } from './apiClient';
+import { USE_MOCKS } from './apiClient';
 import { mapUserDashboard } from './dashboardMappers';
 import { predictionsService } from './predictionsService';
 import { matchesService } from './matchesService';
 import { authService } from './authService';
+import { fetchSharedDashboard } from './dashboardCache';
 
 export async function getMyDashboard() {
   if (USE_MOCKS) {
@@ -34,6 +35,6 @@ export async function getMyDashboard() {
     };
   }
 
-  const response = await apiFetch<any>('/me/dashboard');
+  const response = await fetchSharedDashboard();
   return mapUserDashboard(response);
 }

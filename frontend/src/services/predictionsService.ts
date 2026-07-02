@@ -3,6 +3,7 @@ import { apiFetch, USE_MOCKS } from './apiClient';
 import { authService } from './authService';
 import { mapPrediction } from './mappers';
 import { mockPredictions } from '../mocks/data';
+import { fetchSharedDashboard, invalidateDashboardCache } from './dashboardCache';
 
 const STORAGE_KEY = 'odwyer_predictions';
 
@@ -29,7 +30,7 @@ async function loadMyPredictions(userId?: string): Promise<Prediction[]> {
     return loadPredictions().filter(prediction => prediction.userId === (userId ?? session?.id));
   }
 
-  const response = await apiFetch<{ matches: Array<{ id: string; myPrediction: any | null }> }>('/me/dashboard');
+  const response: { matches: Array<{ id: string; myPrediction: any | null }> } = await fetchSharedDashboard();
   return response.matches
     .filter(match => match.myPrediction)
     .map(match => mapPrediction({
@@ -108,6 +109,7 @@ export const predictionsService = {
       method: 'PUT',
       body: JSON.stringify({ predictions: [{ matchId, choice }] }),
     });
+    invalidateDashboardCache();
     const saved = response.predictions[0];
     return mapPrediction({
       ...saved,
@@ -136,7 +138,7 @@ export const predictionsService = {
       };
     }
 
-    const response = await apiFetch<{ summary: { points: number; position: number | null; correctCount: number; predictedCount: number; pendingPredictions: number } }>('/me/dashboard');
+    const response = await fetchSharedDashboard();
     return {
       totalPredicted: response.summary.predictedCount,
       totalCorrect: response.summary.correctCount,

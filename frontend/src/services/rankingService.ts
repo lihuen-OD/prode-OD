@@ -2,8 +2,11 @@ import type { RankingEntry } from '../types';
 import { apiFetch, USE_MOCKS } from './apiClient';
 import { mapRankingEntry } from './mappers';
 import { mockRanking } from '../mocks/data';
+import { withCache, invalidateCache } from './requestCache';
 
 const STORAGE_KEY = 'odwyer_ranking';
+const RANKING_KEY = 'shared:/ranking';
+const RANKING_TTL_MS = 5000;
 
 function loadRanking(): RankingEntry[] {
   const raw = localStorage.getItem(STORAGE_KEY);
@@ -28,7 +31,9 @@ export const rankingService = {
       return loadRanking().sort((a, b) => b.totalPoints - a.totalPoints || b.totalCorrect - a.totalCorrect);
     }
 
-    const response = await apiFetch<{ ranking: any[]; myPosition: number | null }>('/ranking?limit=1000');
+    const response = await withCache(RANKING_KEY, RANKING_TTL_MS, () =>
+      apiFetch<{ ranking: any[]; myPosition: number | null }>('/ranking?limit=1000'),
+    );
     return response.ranking.map(mapRankingEntry);
   },
 
@@ -39,6 +44,8 @@ export const rankingService = {
   },
 
   async recalculate(): Promise<void> {
+    invalidateCache(RANKING_KEY);
+
     if (USE_MOCKS) {
       const entries = loadRanking().slice().sort((a, b) => b.totalPoints - a.totalPoints || b.totalCorrect - a.totalCorrect);
       entries.forEach((entry, index) => {

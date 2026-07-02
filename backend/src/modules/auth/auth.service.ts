@@ -52,9 +52,22 @@ export async function loginUser(username: string, password: string) {
 }
 
 export async function getCurrentUser(userId: string) {
-  const user = await prisma.user.findUnique({ where: { id: userId } });
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      fullName: true,
+      username: true,
+      phone: true,
+      email: true,
+      role: true,
+      isActive: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
   if (!user) {
     throw new AppError('Usuario no encontrado', 404);
   }
-  return toSafeUser(user);
+  return user;
 }
